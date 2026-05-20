@@ -111,6 +111,26 @@ export default function App() {
 
   // User-dependent States (Initially loaded from default, synced with current user account)
   const [foodLogs, setFoodLogs] = useState(DEFAULT_LOGS);
+  
+  // New: Chronological Symptom Logs array
+  const [symptomLogs, setSymptomLogs] = useState([]);
+
+  // Editable Form states for each distinct metric
+  const [stoolTimestamp, setStoolTimestamp] = useState(() => new Date().toISOString().slice(0, 16));
+  const [stoolNotes, setStoolNotes] = useState('');
+
+  const [bloatingTimestamp, setBloatingTimestamp] = useState(() => new Date().toISOString().slice(0, 16));
+  const [bloatingNotes, setBloatingNotes] = useState('');
+
+  const [energyTimestamp, setEnergyTimestamp] = useState(() => new Date().toISOString().slice(0, 16));
+  const [energyNotes, setEnergyNotes] = useState('');
+
+  const [sleepTimestamp, setSleepTimestamp] = useState(() => new Date().toISOString().slice(0, 16));
+  const [sleepNotes, setSleepNotes] = useState('');
+
+  const [stressTimestamp, setStressTimestamp] = useState(() => new Date().toISOString().slice(0, 16));
+  const [stressNotes, setStressNotes] = useState('');
+
   const [waterIntake, setWaterIntake] = useState(4); 
   const [bloatingLevel, setBloatingLevel] = useState(2); 
   const [energyLevel, setEnergyLevel] = useState(4); 
@@ -121,9 +141,6 @@ export default function App() {
 
   // Custom Food Entry State
   const [foodInput, setFoodInput] = useState('');
-  const [imageInput, setImageInput] = useState(null);
-  const [analyzingFood, setAnalyzingFood] = useState(false);
-  const [manualMode, setManualMode] = useState(false);
   
   // Manual Entry Form State
   const [manualForm, setManualForm] = useState({
@@ -177,6 +194,7 @@ export default function App() {
       db[currentUser.email] = {
         ...db[currentUser.email],
         foodLogs,
+        symptomLogs, // Keep track of chronological symptom timeline
         waterIntake,
         bloatingLevel,
         energyLevel,
@@ -187,7 +205,7 @@ export default function App() {
       };
       localStorage.setItem('mycobiome_user_database', JSON.stringify(db));
     }
-  }, [currentUser, foodLogs, waterIntake, bloatingLevel, energyLevel, stoolType, sleepHours, stressLevel, aiReport]);
+  }, [currentUser, foodLogs, symptomLogs, waterIntake, bloatingLevel, energyLevel, stoolType, sleepHours, stressLevel, aiReport]);
 
   // Load user data upon logging in
   const loadUserData = (email) => {
@@ -195,6 +213,7 @@ export default function App() {
     const userData = db[email];
     if (userData) {
       setFoodLogs(userData.foodLogs || []);
+      setSymptomLogs(userData.symptomLogs || []); // Load history
       setWaterIntake(userData.waterIntake ?? 4);
       setBloatingLevel(userData.bloatingLevel ?? 2);
       setEnergyLevel(userData.energyLevel ?? 4);
@@ -205,6 +224,7 @@ export default function App() {
     } else {
       // Default fallback
       setFoodLogs(DEFAULT_LOGS);
+      setSymptomLogs([]);
       setWaterIntake(4);
       setBloatingLevel(2);
       setEnergyLevel(4);
@@ -292,6 +312,58 @@ export default function App() {
     setAuthEmail('');
     setAuthPassword('');
     setAuthName('');
+  };
+
+  // Helper to handle submitting a symptom log with editable timestamp and notes
+  const handleAddSymptomLog = (type, value, timestamp, notes, clearNotesFn) => {
+    const newLog = {
+      id: Date.now().toString() + '-' + Math.random().toString(36).substr(2, 9),
+      type,
+      value,
+      timestamp: new Date(timestamp).toISOString(),
+      notes: notes.trim()
+    };
+
+    const updatedLogs = [newLog, ...symptomLogs];
+    setSymptomLogs(updatedLogs);
+
+    // If this newly submitted log is mathematically the most recent log of this type,
+    // update the immediate dashboard/score states
+    const logsOfType = updatedLogs.filter(log => log.type === type);
+    const sortedLogs = [...logsOfType].sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
+    if (sortedLogs[0]?.id === newLog.id) {
+      if (type === 'stool') setStoolType(value);
+      if (type === 'bloating') setBloatingLevel(value);
+      if (type === 'energy') setEnergyLevel(value);
+      if (type === 'sleep') setSleepHours(value);
+      if (type === 'stress') setStressLevel(value);
+      if (type === 'water') setWaterIntake(value);
+    }
+
+    showNotification(`Logged ${type} metric successfully!`);
+    if (clearNotesFn) clearNotesFn('');
+  };
+
+  // Helper to delete historical symptom logs
+  const handleDeleteSymptomLog = (id) => {
+    const updatedLogs = symptomLogs.filter(log => log.id !== id);
+    setSymptomLogs(updatedLogs);
+    showNotification('Symptom entry removed.');
+
+    // Re-calculate the current display values based on remaining logs
+    ['stool', 'bloating', 'energy', 'sleep', 'stress', 'water'].forEach(type => {
+      const logsOfType = updatedLogs.filter(log => log.type === type);
+      if (logsOfType.length > 0) {
+        const sorted = [...logsOfType].sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
+        const latestVal = sorted[0].value;
+        if (type === 'stool') setStoolType(latestVal);
+        if (type === 'bloating') setBloatingLevel(latestVal);
+        if (type === 'energy') setEnergyLevel(latestVal);
+        if (type === 'sleep') setSleepHours(latestVal);
+        if (type === 'stress') setStressLevel(latestVal);
+        if (type === 'water') setWaterIntake(latestVal);
+      }
+    });
   };
 
   // ----------------------------------------------------
@@ -1606,7 +1678,7 @@ export default function App() {
                 <div>
                   <h3 className="text-base font-extrabold text-slate-950">Bristol Stool Chart Tracker</h3>
                   <p className="text-xs text-slate-500 mt-0.5 mb-6">
-                    Bowel form is the primary biological indicator of gut motility, dietary fiber activity, and transit time.
+                    Bowel form is the primary biological indicator of gut motility, dietary fiber activity, and transit time. Select a bowel form, customize the timestamp, and submit the log below.
                   </p>
                 </div>
 
@@ -1617,7 +1689,7 @@ export default function App() {
                       type="button"
                       onClick={() => {
                         setStoolType(item.type);
-                        showNotification(`Bowel status logged as Bristol Type ${item.type}: ${item.name}`);
+                        showNotification(`Bristol Type ${item.type} selected.`);
                       }}
                       className={`p-4 rounded-2xl border text-left transition flex items-start gap-3.5 group ${
                         stoolType === item.type 
@@ -1653,6 +1725,41 @@ export default function App() {
                     </button>
                   ))}
                 </div>
+
+                {/* Submit Stool Log Form */}
+                <div className="mt-6 p-4 bg-slate-50 rounded-2xl border border-slate-100 space-y-4">
+                  <h4 className="text-xs font-black uppercase text-slate-600 tracking-wider flex items-center gap-1.5">
+                    <Clock className="h-4 w-4 text-emerald-600" /> Stool Log Details
+                  </h4>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-[10px] text-slate-400 font-bold uppercase mb-1">Time of Bowel Movement</label>
+                      <input
+                        type="datetime-local"
+                        value={stoolTimestamp}
+                        onChange={(e) => setStoolTimestamp(e.target.value)}
+                        className="w-full text-xs p-2.5 rounded-xl border border-slate-200 bg-white focus:ring-2 focus:ring-emerald-500 focus:outline-none"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-[10px] text-slate-400 font-bold uppercase mb-1">Add Notes (Optional)</label>
+                      <input
+                        type="text"
+                        placeholder="e.g., after lunch, felt normal"
+                        value={stoolNotes}
+                        onChange={(e) => setStoolNotes(e.target.value)}
+                        className="w-full text-xs p-2.5 rounded-xl border border-slate-200 bg-white focus:ring-2 focus:ring-emerald-500 focus:outline-none"
+                      />
+                    </div>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => handleAddSymptomLog('stool', stoolType, stoolTimestamp, stoolNotes, setStoolNotes)}
+                    className="w-full bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold py-2.5 rounded-xl transition shadow"
+                  >
+                    Submit Bowel Log (Bristol Type {stoolType})
+                  </button>
+                </div>
               </div>
             </div>
 
@@ -1662,15 +1769,15 @@ export default function App() {
               <div className="bg-white rounded-3xl p-6 border border-slate-100 shadow-sm space-y-6">
                 <div>
                   <h3 className="text-base font-extrabold text-slate-950">Daily Biofeedback</h3>
-                  <p className="text-xs text-slate-500">Track physical cues for AI correlation</p>
+                  <p className="text-xs text-slate-500">Track physical cues for AI correlation as often as you wish with custom timestamps.</p>
                 </div>
 
                 {/* Bloating Slider */}
-                <div className="space-y-2">
+                <div className="p-4 bg-slate-50/50 rounded-2xl border border-slate-100 space-y-3">
                   <div className="flex justify-between items-center">
-                    <label className="text-xs font-bold text-slate-700">Bloating/Distension</label>
+                    <label className="text-xs font-extrabold text-slate-700">Bloating/Distension</label>
                     <span className="text-xs bg-slate-100 font-mono px-2 py-0.5 rounded text-slate-800 font-semibold">
-                      {bloatingLevel === 1 ? 'None (1/5)' : bloatingLevel === 3 ? 'Mild (3/5)' : bloatingLevel === 5 ? 'Severe (5/5)' : `${bloatingLevel}/5`}
+                      {bloatingLevel === 1 ? 'None' : bloatingLevel === 3 ? 'Mild' : bloatingLevel === 5 ? 'Severe' : `${bloatingLevel}/5`}
                     </span>
                   </div>
                   <input
@@ -1681,12 +1788,40 @@ export default function App() {
                     onChange={(e) => setBloatingLevel(Number(e.target.value))}
                     className="w-full accent-emerald-600 cursor-pointer h-1.5 bg-slate-100 rounded-lg"
                   />
+                  <div className="grid grid-cols-2 gap-2 text-[10px]">
+                    <div>
+                      <span className="text-slate-400 font-bold uppercase">Time</span>
+                      <input
+                        type="datetime-local"
+                        value={bloatingTimestamp}
+                        onChange={(e) => setBloatingTimestamp(e.target.value)}
+                        className="w-full mt-0.5 p-1.5 rounded-lg border border-slate-200 bg-white text-[11px]"
+                      />
+                    </div>
+                    <div>
+                      <span className="text-slate-400 font-bold uppercase">Notes</span>
+                      <input
+                        type="text"
+                        placeholder="e.g., after broccoli"
+                        value={bloatingNotes}
+                        onChange={(e) => setBloatingNotes(e.target.value)}
+                        className="w-full mt-0.5 p-1.5 rounded-lg border border-slate-200 bg-white text-[11px]"
+                      />
+                    </div>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => handleAddSymptomLog('bloating', bloatingLevel, bloatingTimestamp, bloatingNotes, setBloatingNotes)}
+                    className="w-full bg-slate-900 hover:bg-slate-800 text-white text-[11px] font-bold py-1.5 rounded-lg transition"
+                  >
+                    Submit Bloating Measure
+                  </button>
                 </div>
 
                 {/* Energy Slider */}
-                <div className="space-y-2">
+                <div className="p-4 bg-slate-50/50 rounded-2xl border border-slate-100 space-y-3">
                   <div className="flex justify-between items-center">
-                    <label className="text-xs font-bold text-slate-700">Energy & Mental Vitality</label>
+                    <label className="text-xs font-extrabold text-slate-700">Energy & Vitality</label>
                     <span className="text-xs bg-slate-100 font-mono px-2 py-0.5 rounded text-slate-800 font-semibold">
                       {energyLevel === 1 ? 'Fatigued' : energyLevel === 3 ? 'Steady' : energyLevel === 5 ? 'Vibrant' : `${energyLevel}/5`}
                     </span>
@@ -1699,12 +1834,40 @@ export default function App() {
                     onChange={(e) => setEnergyLevel(Number(e.target.value))}
                     className="w-full accent-blue-600 cursor-pointer h-1.5 bg-slate-100 rounded-lg"
                   />
+                  <div className="grid grid-cols-2 gap-2 text-[10px]">
+                    <div>
+                      <span className="text-slate-400 font-bold uppercase">Time</span>
+                      <input
+                        type="datetime-local"
+                        value={energyTimestamp}
+                        onChange={(e) => setEnergyTimestamp(e.target.value)}
+                        className="w-full mt-0.5 p-1.5 rounded-lg border border-slate-200 bg-white text-[11px]"
+                      />
+                    </div>
+                    <div>
+                      <span className="text-slate-400 font-bold uppercase">Notes</span>
+                      <input
+                        type="text"
+                        placeholder="e.g., midday crash"
+                        value={energyNotes}
+                        onChange={(e) => setEnergyNotes(e.target.value)}
+                        className="w-full mt-0.5 p-1.5 rounded-lg border border-slate-200 bg-white text-[11px]"
+                      />
+                    </div>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => handleAddSymptomLog('energy', energyLevel, energyTimestamp, energyNotes, setEnergyNotes)}
+                    className="w-full bg-slate-900 hover:bg-slate-800 text-white text-[11px] font-bold py-1.5 rounded-lg transition"
+                  >
+                    Submit Energy Measure
+                  </button>
                 </div>
 
                 {/* Sleep Slider */}
-                <div className="space-y-2">
+                <div className="p-4 bg-slate-50/50 rounded-2xl border border-slate-100 space-y-3">
                   <div className="flex justify-between items-center">
-                    <label className="text-xs font-bold text-slate-700">Sleep Quality</label>
+                    <label className="text-xs font-extrabold text-slate-700">Sleep Quality</label>
                     <span className="text-xs bg-slate-100 font-mono px-2 py-0.5 rounded text-slate-800 font-semibold">
                       {sleepHours} Hours
                     </span>
@@ -1718,16 +1881,44 @@ export default function App() {
                     onChange={(e) => setSleepHours(Number(e.target.value))}
                     className="w-full accent-indigo-600 cursor-pointer h-1.5 bg-slate-100 rounded-lg"
                   />
+                  <div className="grid grid-cols-2 gap-2 text-[10px]">
+                    <div>
+                      <span className="text-slate-400 font-bold uppercase">Time</span>
+                      <input
+                        type="datetime-local"
+                        value={sleepTimestamp}
+                        onChange={(e) => setSleepTimestamp(e.target.value)}
+                        className="w-full mt-0.5 p-1.5 rounded-lg border border-slate-200 bg-white text-[11px]"
+                      />
+                    </div>
+                    <div>
+                      <span className="text-slate-400 font-bold uppercase">Notes</span>
+                      <input
+                        type="text"
+                        placeholder="e.g., woke up once"
+                        value={sleepNotes}
+                        onChange={(e) => setSleepNotes(e.target.value)}
+                        className="w-full mt-0.5 p-1.5 rounded-lg border border-slate-200 bg-white text-[11px]"
+                      />
+                    </div>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => handleAddSymptomLog('sleep', sleepHours, sleepTimestamp, sleepNotes, setSleepNotes)}
+                    className="w-full bg-slate-900 hover:bg-slate-800 text-white text-[11px] font-bold py-1.5 rounded-lg transition"
+                  >
+                    Submit Sleep Measure
+                  </button>
                 </div>
 
                 {/* Stress Slider */}
-                <div className="space-y-2">
+                <div className="p-4 bg-slate-50/50 rounded-2xl border border-slate-100 space-y-3">
                   <div className="flex justify-between items-center">
-                    <label className="text-xs font-bold text-slate-700 flex items-center gap-1.5">
+                    <label className="text-xs font-extrabold text-slate-700 flex items-center gap-1.5">
                       Stress Level <Info className="h-3 w-3 text-slate-400" title="Stress restricts gut blood flow and slows motility" />
                     </label>
                     <span className="text-xs bg-slate-100 font-mono px-2 py-0.5 rounded text-slate-800 font-semibold">
-                      {stressLevel === 1 ? 'Serene' : stressLevel === 3 ? 'Moderate' : stressLevel === 5 ? 'Highly Anxious' : `${stressLevel}/5`}
+                      {stressLevel === 1 ? 'Serene' : stressLevel === 3 ? 'Moderate' : stressLevel === 5 ? 'High' : `${stressLevel}/5`}
                     </span>
                   </div>
                   <input
@@ -1738,6 +1929,34 @@ export default function App() {
                     onChange={(e) => setStressLevel(Number(e.target.value))}
                     className="w-full accent-amber-600 cursor-pointer h-1.5 bg-slate-100 rounded-lg"
                   />
+                  <div className="grid grid-cols-2 gap-2 text-[10px]">
+                    <div>
+                      <span className="text-slate-400 font-bold uppercase">Time</span>
+                      <input
+                        type="datetime-local"
+                        value={stressTimestamp}
+                        onChange={(e) => setStressTimestamp(e.target.value)}
+                        className="w-full mt-0.5 p-1.5 rounded-lg border border-slate-200 bg-white text-[11px]"
+                      />
+                    </div>
+                    <div>
+                      <span className="text-slate-400 font-bold uppercase">Notes</span>
+                      <input
+                        type="text"
+                        placeholder="e.g., tight deadline"
+                        value={stressNotes}
+                        onChange={(e) => setStressNotes(e.target.value)}
+                        className="w-full mt-0.5 p-1.5 rounded-lg border border-slate-200 bg-white text-[11px]"
+                      />
+                    </div>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => handleAddSymptomLog('stress', stressLevel, stressTimestamp, stressNotes, setStressNotes)}
+                    className="w-full bg-slate-900 hover:bg-slate-800 text-white text-[11px] font-bold py-1.5 rounded-lg transition"
+                  >
+                    Submit Stress Measure
+                  </button>
                 </div>
 
                 <div className="p-3 bg-indigo-50/60 rounded-xl border border-indigo-100/50 text-[11px] text-indigo-900 leading-relaxed">
@@ -1746,6 +1965,87 @@ export default function App() {
 
               </div>
 
+            </div>
+
+            {/* Bottom Full-Width Section: Historical Symptom Timeline Logs */}
+            <div className="lg:col-span-3 bg-white rounded-3xl p-6 border border-slate-100 shadow-sm">
+              <div className="flex items-center justify-between mb-4 border-b border-slate-100 pb-3">
+                <div>
+                  <h3 className="text-sm font-extrabold text-slate-950 flex items-center gap-1.5">
+                    <Activity className="h-4 w-4 text-emerald-600" /> Biofeedback & Symptom Timeline
+                  </h3>
+                  <p className="text-xs text-slate-500">Historical records of your tracked measurements</p>
+                </div>
+                {symptomLogs.length > 0 && (
+                  <button
+                    onClick={() => {
+                      setSymptomLogs([]);
+                      showNotification('All symptom logs cleared!');
+                    }}
+                    className="text-xs text-red-500 hover:underline flex items-center gap-1 font-semibold"
+                  >
+                    <RotateCcw className="h-3.5 w-3.5" /> Clear Timeline
+                  </button>
+                )}
+              </div>
+
+              {symptomLogs.length === 0 ? (
+                <div className="text-center py-8 bg-slate-50/50 rounded-2xl border border-slate-100">
+                  <Activity className="h-10 w-10 text-slate-300 mx-auto mb-2" />
+                  <h4 className="text-xs font-bold text-slate-700">No Symptom History</h4>
+                  <p className="text-[11px] text-slate-400 mt-0.5">Use the panels above to customize and log measurements with notes and timestamps.</p>
+                </div>
+              ) : (
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 max-h-96 overflow-y-auto pr-1">
+                  {symptomLogs.map((log) => {
+                    let badgeColor = 'bg-slate-100 text-slate-800';
+                    let displayVal = log.value;
+
+                    if (log.type === 'stool') {
+                      badgeColor = 'bg-amber-100 text-amber-800 border-amber-200';
+                      displayVal = `Bristol Type ${log.value}`;
+                    } else if (log.type === 'bloating') {
+                      badgeColor = 'bg-rose-100 text-rose-800 border-rose-200';
+                      displayVal = `Bloating: ${log.value}/5`;
+                    } else if (log.type === 'energy') {
+                      badgeColor = 'bg-blue-100 text-blue-800 border-blue-200';
+                      displayVal = `Energy: ${log.value}/5`;
+                    } else if (log.type === 'sleep') {
+                      badgeColor = 'bg-indigo-100 text-indigo-800 border-indigo-200';
+                      displayVal = `Sleep: ${log.value} hrs`;
+                    } else if (log.type === 'stress') {
+                      badgeColor = 'bg-purple-100 text-purple-800 border-purple-200';
+                      displayVal = `Stress: ${log.value}/5`;
+                    }
+
+                    return (
+                      <div key={log.id} className="p-3.5 rounded-2xl border border-slate-100 bg-slate-50/30 flex items-start justify-between gap-3 relative group">
+                        <div className="space-y-1">
+                          <div className="flex items-center gap-2 flex-wrap">
+                            <span className={`text-[9px] font-bold px-2 py-0.5 rounded-md uppercase border ${badgeColor}`}>
+                              {log.type}
+                            </span>
+                            <span className="text-[10px] text-slate-400 font-mono">
+                              {new Date(log.timestamp).toLocaleString([], { dateStyle: 'short', timeStyle: 'short' })}
+                            </span>
+                          </div>
+                          <h4 className="text-xs font-bold text-slate-900">{displayVal}</h4>
+                          {log.notes && (
+                            <p className="text-[11px] text-slate-500 italic">“{log.notes}”</p>
+                          )}
+                        </div>
+                        <button
+                          onClick={() => handleDeleteSymptomLog(log.id)}
+                          className="text-slate-400 hover:text-red-500 p-1 rounded-lg hover:bg-red-50 transition"
+                          title="Delete log"
+                        >
+                          <Trash2 className="h-3.5 w-3.5" />
+                        </button>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
             </div>
 
           </div>
