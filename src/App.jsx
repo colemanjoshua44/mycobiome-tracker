@@ -24,7 +24,11 @@ import {
   HelpCircle,
   Moon,
   Clock,
-  Settings
+  Settings,
+  Lock,
+  Mail,
+  LogOut,
+  UserPlus
 } from 'lucide-react';
 
 const BRISTOL_STOOL_CHART = [
@@ -93,8 +97,28 @@ const DEFAULT_LOGS = [
 
 export default function App() {
   const [activeTab, setActiveTab] = useState('dashboard');
-  const [foodLogs, setFoodLogs] = useState(DEFAULT_LOGS);
   
+  // Authentication & Users State
+  const [currentUser, setCurrentUser] = useState(() => {
+    const saved = localStorage.getItem('mycobiome_current_user');
+    return saved ? JSON.parse(saved) : null;
+  });
+  const [authMode, setAuthMode] = useState('login'); // 'login' or 'signup'
+  const [authEmail, setAuthEmail] = useState('');
+  const [authPassword, setAuthPassword] = useState('');
+  const [authName, setAuthName] = useState('');
+  const [showAuthModal, setShowAuthModal] = useState(false);
+
+  // User-dependent States (Initially loaded from default, synced with current user account)
+  const [foodLogs, setFoodLogs] = useState(DEFAULT_LOGS);
+  const [waterIntake, setWaterIntake] = useState(4); 
+  const [bloatingLevel, setBloatingLevel] = useState(2); 
+  const [energyLevel, setEnergyLevel] = useState(4); 
+  const [stoolType, setStoolType] = useState(4); 
+  const [sleepHours, setSleepHours] = useState(7.5);
+  const [stressLevel, setStressLevel] = useState(2); 
+  const [aiReport, setAiReport] = useState(null);
+
   // Custom Food Entry State
   const [foodInput, setFoodInput] = useState('');
   const [imageInput, setImageInput] = useState(null);
@@ -117,19 +141,10 @@ export default function App() {
     plantDiversityPoints: 1
   });
 
-  // Well-being & Symptoms State
-  const [waterIntake, setWaterIntake] = useState(4); // in cups/glasses (250ml)
-  const [bloatingLevel, setBloatingLevel] = useState(2); // 1 to 5
-  const [energyLevel, setEnergyLevel] = useState(4); // 1 to 5
-  const [stoolType, setStoolType] = useState(4); // Bristol Type
-  const [sleepHours, setSleepHours] = useState(7.5);
-  const [stressLevel, setStressLevel] = useState(2); // 1 to 5
-
   // Daily Synthesis / Microbiome AI State
-  const [aiReport, setAiReport] = useState(null);
   const [generatingReport, setGeneratingReport] = useState(false);
 
-  // Error/Success visual notifications (Replacing browser alert)
+  // Notifications
   const [notification, setNotification] = useState(null);
 
   // API Key Settings States
@@ -137,12 +152,151 @@ export default function App() {
   const [apiKeyInput, setApiKeyInput] = useState(apiKey);
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
 
+  // Helper: Trigger notifications
   const showNotification = (message, type = 'success') => {
     setNotification({ message, type });
     setTimeout(() => {
       setNotification(null);
     }, 4500);
   };
+
+  // ----------------------------------------------------
+  // MULTI-USER STORAGE SYSTEM LOGIC
+  // ----------------------------------------------------
+  
+  // Helper to get raw users database
+  const getDatabase = () => {
+    const db = localStorage.getItem('mycobiome_user_database');
+    return db ? JSON.parse(db) : {};
+  };
+
+  // Sync user's data package to database when changes occur
+  useEffect(() => {
+    if (currentUser) {
+      const db = getDatabase();
+      db[currentUser.email] = {
+        ...db[currentUser.email],
+        foodLogs,
+        waterIntake,
+        bloatingLevel,
+        energyLevel,
+        stoolType,
+        sleepHours,
+        stressLevel,
+        aiReport
+      };
+      localStorage.setItem('mycobiome_user_database', JSON.stringify(db));
+    }
+  }, [currentUser, foodLogs, waterIntake, bloatingLevel, energyLevel, stoolType, sleepHours, stressLevel, aiReport]);
+
+  // Load user data upon logging in
+  const loadUserData = (email) => {
+    const db = getDatabase();
+    const userData = db[email];
+    if (userData) {
+      setFoodLogs(userData.foodLogs || []);
+      setWaterIntake(userData.waterIntake ?? 4);
+      setBloatingLevel(userData.bloatingLevel ?? 2);
+      setEnergyLevel(userData.energyLevel ?? 4);
+      setStoolType(userData.stoolType ?? 4);
+      setSleepHours(userData.sleepHours ?? 7.5);
+      setStressLevel(userData.stressLevel ?? 2);
+      setAiReport(userData.aiReport || null);
+    } else {
+      // Default fallback
+      setFoodLogs(DEFAULT_LOGS);
+      setWaterIntake(4);
+      setBloatingLevel(2);
+      setEnergyLevel(4);
+      setStoolType(4);
+      setSleepHours(7.5);
+      setStressLevel(2);
+      setAiReport(null);
+    }
+  };
+
+  const handleRegister = (e) => {
+    e.preventDefault();
+    if (!authEmail || !authPassword || !authName) {
+      showNotification('Please fill in all registration fields.', 'error');
+      return;
+    }
+    const db = getDatabase();
+    if (db[authEmail]) {
+      showNotification('An account with this email already exists.', 'error');
+      return;
+    }
+
+    // Save user info
+    const newUser = { email: authEmail, name: authName, password: authPassword };
+    db[authEmail] = {
+      profile: newUser,
+      foodLogs: DEFAULT_LOGS,
+      waterIntake: 4,
+      bloatingLevel: 2,
+      energyLevel: 4,
+      stoolType: 4,
+      sleepHours: 7.5,
+      stressLevel: 2,
+      aiReport: null
+    };
+
+    localStorage.setItem('mycobiome_user_database', JSON.stringify(db));
+    setCurrentUser(newUser);
+    localStorage.setItem('mycobiome_current_user', JSON.stringify(newUser));
+    loadUserData(authEmail);
+    setShowAuthModal(false);
+    showNotification(`Welcome to MycoBiome, ${authName}! Account created.`);
+    clearAuthFields();
+  };
+
+  const handleLogin = (e) => {
+    e.preventDefault();
+    if (!authEmail || !authPassword) {
+      showNotification('Please fill in your login credentials.', 'error');
+      return;
+    }
+    const db = getDatabase();
+    const userAccount = db[authEmail];
+
+    if (!userAccount || userAccount.profile?.password !== authPassword) {
+      showNotification('Invalid email or password.', 'error');
+      return;
+    }
+
+    const matchedUser = userAccount.profile;
+    setCurrentUser(matchedUser);
+    localStorage.setItem('mycobiome_current_user', JSON.stringify(matchedUser));
+    loadUserData(authEmail);
+    setShowAuthModal(false);
+    showNotification(`Welcome back, ${matchedUser.name}!`);
+    clearAuthFields();
+  };
+
+  const handleLogout = () => {
+    setCurrentUser(null);
+    localStorage.removeItem('mycobiome_current_user');
+    // Revert to local transient defaults
+    setFoodLogs(DEFAULT_LOGS);
+    setWaterIntake(4);
+    setBloatingLevel(2);
+    setEnergyLevel(4);
+    setStoolType(4);
+    setSleepHours(7.5);
+    setStressLevel(2);
+    setAiReport(null);
+    showNotification('Logged out successfully.');
+  };
+
+  const clearAuthFields = () => {
+    setAuthEmail('');
+    setAuthPassword('');
+    setAuthName('');
+  };
+
+  // ----------------------------------------------------
+  // SETTINGS & METRICS LOGIC
+  // ----------------------------------------------------
 
   const saveApiKey = (e) => {
     e.preventDefault();
@@ -160,9 +314,7 @@ export default function App() {
       if (safeMeta && safeMeta.env) {
         envKey = safeMeta.env.VITE_GEMINI_API_KEY || '';
       }
-    } catch (e) {
-      // Safe fallback if execution fails
-    }
+    } catch (e) {}
     return apiKey || envKey || '';
   };
 
@@ -179,34 +331,29 @@ export default function App() {
     return acc;
   }, { calories: 0, carbs: 0, protein: 0, fats: 0, fiber: 0, prebiotics: 0, probioticsCount: 0, fermentedCount: 0, plantDiversity: 0 });
 
-  // Recommended Daily Values (RDVs)
   const targets = {
     calories: 2000,
     carbs: 250,
     protein: 65,
     fats: 70,
-    fiber: 30, // Gut standard: aim for 30g+
-    prebiotics: 8, // Prebiotic target
-    water: 8, // cups
-    plantDiversity: 30 // Target per week, but daily score calculates relative progress
+    fiber: 30, 
+    prebiotics: 8, 
+    water: 8, 
+    plantDiversity: 30 
   };
 
-  // The Microbiome Well-being Score is synthesised using weighted criteria:
-  // $Score = w_1 \cdot \text{Fiber\%} + w_2 \cdot \text{Prebiotics\%} + w_3 \cdot \text{Probiotics} + w_4 \cdot \text{Water\%} + w_5 \cdot \text{Stool} + w_6 \cdot \text{Lifestyle}$
   const calculateMicrobiomeScore = () => {
     const fiberScore = Math.min((dailyTotals.fiber / targets.fiber) * 100, 100);
     const prebioticScore = Math.min((dailyTotals.prebiotics / targets.prebiotics) * 100, 100);
     const probioScore = Math.min(((dailyTotals.probioticsCount * 40) + (dailyTotals.fermentedCount * 25)), 100);
     const hydrationScore = Math.min((waterIntake / targets.water) * 100, 100);
     
-    // Bristol Stool Penalty
     let stoolScore = 50;
     if (stoolType === 3 || stoolType === 4) stoolScore = 100;
     else if (stoolType === 2 || stoolType === 5) stoolScore = 75;
     else if (stoolType === 1 || stoolType === 6) stoolScore = 40;
     else stoolScore = 15;
 
-    // Lifestyle factor score
     const lifestyleScore = ((6 - stressLevel) * 10) + (Math.min(sleepHours / 8, 1.2) * 50);
 
     const rawScore = (fiberScore * 0.3) + (prebioticScore * 0.2) + (probioScore * 0.15) + (hydrationScore * 0.1) + (stoolScore * 0.1) + (lifestyleScore * 0.15);
@@ -215,7 +362,6 @@ export default function App() {
 
   const microbiomeScore = calculateMicrobiomeScore();
 
-  // Based on the calculated scores, different microbe types will thrive, glow, multiply or decrease
   const getMicrobeStatus = () => {
     const fiberRatio = dailyTotals.fiber / targets.fiber;
     const prebioticRatio = dailyTotals.prebiotics / targets.prebiotics;
@@ -241,7 +387,6 @@ export default function App() {
         label: 'Akkermansia muciniphila (Gut Barrier Protectors)'
       },
       opportunistic: {
-        // High processed/lack of fiber allows bad bacterial families to grow
         population: Math.max(25 - Math.round(fiberRatio * 15), 5),
         mood: fiberRatio < 0.4 ? 'aggressive' : 'dormant',
         color: '#f59e0b',
@@ -251,6 +396,10 @@ export default function App() {
   };
 
   const microbes = getMicrobeStatus();
+
+  // ----------------------------------------------------
+  // GEMINI AI NUTRITION & SYMPTOMS API CALLS
+  // ----------------------------------------------------
 
   const handleAIFoodParse = async (e) => {
     e.preventDefault();
@@ -482,7 +631,6 @@ export default function App() {
     setFoodLogs([newLog, ...foodLogs]);
     showNotification(`Logged: "${manualForm.foodName}" successfully.`);
     
-    // Reset manual form
     setManualForm({
       foodName: '',
       calories: 250,
@@ -533,13 +681,105 @@ export default function App() {
       {!getActiveApiKey() && (
         <div className="bg-amber-50 border-b border-amber-100 py-2.5 px-4 text-center text-xs text-amber-800 font-medium flex items-center justify-center gap-2">
           <AlertCircle className="h-4 w-4 text-amber-600 shrink-0" />
-          <span>Gemini AI is currently offline. Setup your free API Key to enable instant nutrition analysis and reports.</span>
+          <span>Gemini AI is offline. Setup your free API Key to enable instant nutrition analysis and reports.</span>
           <button 
             onClick={() => setIsSettingsOpen(true)}
             className="underline hover:text-amber-950 font-bold ml-1"
           >
             Configure Key
           </button>
+        </div>
+      )}
+
+      {/* Account Login/Sign Up Modal */}
+      {showAuthModal && (
+        <div className="fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+          <div className="bg-white rounded-3xl p-6 max-w-md w-full border border-slate-100 shadow-2xl space-y-4 animate-in fade-in zoom-in-95 duration-200">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2 text-slate-900">
+                <User className="h-5 w-5 text-emerald-600" />
+                <h3 className="font-extrabold text-base">
+                  {authMode === 'login' ? 'Welcome Back!' : 'Create Your Account'}
+                </h3>
+              </div>
+              <button 
+                onClick={() => { setShowAuthModal(false); clearAuthFields(); }}
+                className="text-slate-400 hover:text-slate-600 text-sm font-semibold p-1"
+              >
+                ✕
+              </button>
+            </div>
+
+            <p className="text-xs text-slate-500 leading-relaxed">
+              Create an account to securely save and access your gut tracking logs, water goals, and AI reports even after closing your browser tab.
+            </p>
+
+            <form onSubmit={authMode === 'login' ? handleLogin : handleRegister} className="space-y-3">
+              {authMode === 'signup' && (
+                <div>
+                  <label className="block text-[10px] text-slate-400 font-black uppercase tracking-wider mb-1">Your Name</label>
+                  <div className="relative">
+                    <User className="absolute left-3.5 top-3.5 h-4 w-4 text-slate-400" />
+                    <input 
+                      type="text" 
+                      placeholder="e.g., Alex Carter" 
+                      value={authName}
+                      onChange={(e) => setAuthName(e.target.value)}
+                      className="w-full text-sm pl-10 p-3 rounded-xl border border-slate-200 focus:ring-2 focus:ring-emerald-500 focus:outline-none"
+                    />
+                  </div>
+                </div>
+              )}
+
+              <div>
+                <label className="block text-[10px] text-slate-400 font-black uppercase tracking-wider mb-1">Email Address</label>
+                <div className="relative">
+                  <Mail className="absolute left-3.5 top-3.5 h-4 w-4 text-slate-400" />
+                  <input 
+                    type="email" 
+                    placeholder="name@example.com" 
+                    value={authEmail}
+                    onChange={(e) => setAuthEmail(e.target.value)}
+                    className="w-full text-sm pl-10 p-3 rounded-xl border border-slate-200 focus:ring-2 focus:ring-emerald-500 focus:outline-none"
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-[10px] text-slate-400 font-black uppercase tracking-wider mb-1">Password</label>
+                <div className="relative">
+                  <Lock className="absolute left-3.5 top-3.5 h-4 w-4 text-slate-400" />
+                  <input 
+                    type="password" 
+                    placeholder="••••••••" 
+                    value={authPassword}
+                    onChange={(e) => setAuthPassword(e.target.value)}
+                    className="w-full text-sm pl-10 p-3 rounded-xl border border-slate-200 focus:ring-2 focus:ring-emerald-500 focus:outline-none"
+                  />
+                </div>
+              </div>
+
+              <button
+                type="submit"
+                className="w-full bg-slate-900 hover:bg-slate-800 text-white text-xs font-bold py-3 rounded-xl transition shadow"
+              >
+                {authMode === 'login' ? 'Log In to MycoBiome' : 'Complete Registration'}
+              </button>
+
+              <div className="text-center pt-2">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setAuthMode(authMode === 'login' ? 'signup' : 'login');
+                    clearAuthFields();
+                  }}
+                  className="text-xs text-emerald-600 hover:underline font-semibold"
+                >
+                  {authMode === 'login' ? "Don't have an account? Sign Up" : "Already have an account? Log In"}
+                </button>
+              </div>
+            </form>
+          </div>
         </div>
       )}
 
@@ -640,6 +880,29 @@ export default function App() {
           </nav>
 
           <div className="flex items-center gap-2">
+            {/* User Profile Login / Status Trigger */}
+            {currentUser ? (
+              <div className="flex items-center gap-2">
+                <span className="hidden sm:inline-block text-xs font-bold text-slate-700 bg-slate-100 px-2.5 py-1.5 rounded-xl">
+                  👤 {currentUser.name}
+                </span>
+                <button
+                  onClick={handleLogout}
+                  className="p-2 bg-red-50 hover:bg-red-100 text-red-600 rounded-xl transition"
+                  title="Log Out"
+                >
+                  <LogOut className="h-4 w-4" />
+                </button>
+              </div>
+            ) : (
+              <button
+                onClick={() => { setAuthMode('login'); setShowAuthModal(true); }}
+                className="inline-flex items-center gap-1.5 text-xs font-bold text-slate-700 bg-slate-100 hover:bg-slate-200 px-3 py-1.5 rounded-xl transition"
+              >
+                <User className="h-4 w-4" /> Sign In
+              </button>
+            )}
+
             <div className="flex items-center gap-1.5 bg-emerald-50 text-emerald-800 px-3 py-1.5 rounded-xl border border-emerald-100">
               <Heart className="h-4 w-4 fill-emerald-500 text-emerald-500 animate-pulse" />
               <span className="text-xs font-bold font-mono">Score: {microbiomeScore}%</span>
@@ -1732,7 +1995,7 @@ export default function App() {
               {/* Probiotics Ferments List */}
               <div className="bg-white rounded-3xl p-6 border border-slate-100 shadow-sm space-y-4">
                 <div>
-                  <h4 className="text-xs font-extrabold text-slate-900 uppercase tracking-wider">Probiotic Sources</h4>
+                  <h4 className="text-xs font-extrabold text-slate-950 uppercase tracking-wider">Probiotic Sources</h4>
                   <p className="text-[11px] text-slate-500">Traditional fermented flora builders</p>
                 </div>
                 <div className="space-y-3">
