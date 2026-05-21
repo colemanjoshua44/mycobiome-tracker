@@ -1,121 +1,135 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef } from "react";
 import { 
-  Heart, 
-  Plus, 
-  Trash2, 
-  Sparkles, 
-  Calendar, 
-  Info, 
-  Droplet, 
-  Smile, 
-  Meh, 
-  Frown, 
+  Activity, 
   BookOpen, 
-  Flame, 
-  Apple, 
-  TrendingUp, 
-  RotateCcw,
-  Camera,
-  Activity,
-  User,
-  CheckCircle,
-  AlertCircle,
-  ChevronRight,
-  HelpCircle,
-  Moon,
-  Clock,
-  Settings,
-  Lock,
-  Mail,
-  LogOut,
-  UserPlus
-} from 'lucide-react';
+  Calendar, 
+  Check, 
+  ChevronRight, 
+  Clock, 
+  Database, 
+  FileText, 
+  Heart, 
+  HelpCircle, 
+  Info, 
+  Layers, 
+  LogOut, 
+  Plus, 
+  RotateCcw, 
+  Send, 
+  Settings, 
+  Smile, 
+  Sparkles, 
+  Trash2, 
+  User, 
+  X,
+  Smartphone,
+  RefreshCw,
+  Copy,
+  KeyRound
+} from "lucide-react";
+
 
 const BRISTOL_STOOL_CHART = [
-  { type: 1, name: 'Severe Constipation', desc: 'Separate hard lumps, like nuts (hard to pass)', rating: 'poor', color: 'text-red-500' },
-  { type: 2, name: 'Mild Constipation', desc: 'Sausage-shaped but lumpy', rating: 'moderate', color: 'text-amber-500' },
-  { type: 3, name: 'Normal', desc: 'Like a sausage but with cracks on surface', rating: 'excellent', color: 'text-emerald-500' },
-  { type: 4, name: 'Ideal', desc: 'Like a sausage or snake, smooth and soft', rating: 'excellent', color: 'text-emerald-500' },
-  { type: 5, name: 'Lacking Fiber', desc: 'Soft blobs with clear-cut edges', rating: 'moderate', color: 'text-amber-500' },
-  { type: 6, name: 'Mild Diarrhea', desc: 'Fluffy pieces with ragged edges, a mushy stool', rating: 'poor', color: 'text-red-500' },
-  { type: 7, name: 'Severe Diarrhea', desc: 'Watery, no solid pieces, entirely liquid', rating: 'poor', color: 'text-red-500' },
-];
-
-const PRESET_PLANTS = [
-  'Oatmeal', 'Banana', 'Chia Seeds', 'Blueberries', 'Garlic', 'Onion', 
-  'Spinach', 'Broccoli', 'Almonds', 'Walnuts', 'Sweet Potato', 'Lentils', 
-  'Chickpeas', 'Flaxseeds', 'Avocado', 'Apple', 'Tomato', 'Asparagus'
-];
-
-const PREBIOTIC_SOURCES = [
-  { name: 'Inulin', foods: 'Chicory root, Jerusalem artichoke, garlic, onions, leeks, asparagus' },
-  { name: 'Beta-Glucan', foods: 'Oats, barley, mushrooms (shiitake, reishi)' },
-  { name: 'Pectin', foods: 'Apples, pears, plums, citrus fruits' },
-  { name: 'Resistant Starch', foods: 'Cooked and cooled potatoes/rice, green bananas, legumes' }
-];
-
-const PROBIOTIC_SOURCES = [
-  { name: 'Lactobacillus', foods: 'Yogurt, Kefir, Kimchi, Sauerkraut, Sour cream' },
-  { name: 'Bifidobacterium', foods: 'Kefir, fermented milk, some fortified yogurts' },
-  { name: 'Saccharomyces boulardii', foods: 'Kombucha, specialized fermented products' }
+  { type: 1, name: "Separate Hard Lumps", rating: "severe constipation", desc: "Hard, separate lumps resembling nuts; difficult to pass. Suggests slow transit and low hydration.", color: "text-red-600 bg-red-50 border-red-200" },
+  { type: 2, name: "Sausage-Shaped but Lumpy", rating: "mild constipation", desc: "Sausage-shaped but filled with distinct lumps. Indicates slight dehydration and lack of fermentable fiber.", color: "text-amber-600 bg-amber-50 border-amber-200" },
+  { type: 3, name: "Sausage with Surface Cracks", rating: "normal / optimal", desc: "Like a sausage but with shallow cracks on the surface. Indicates a healthy gut transit time.", color: "text-emerald-600 bg-emerald-50 border-emerald-200" },
+  { type: 4, name: "Smooth and Soft Sausage", rating: "excellent / perfect", desc: "Soft, smooth snake-like sausage. The absolute gold standard of bowel health and gut motility.", color: "text-emerald-600 bg-emerald-50 border-emerald-200" },
+  { type: 5, name: "Soft Blobs with Clear Borders", rating: "low fiber transit", desc: "Soft blobs with clean-cut edges. Suggests faster transit, potentially lacking dietary structure.", color: "text-blue-500 bg-blue-50 border-blue-200" },
+  { type: 6, name: "Mushy Stool with Ragged Edges", rating: "mild diarrhea", desc: "Mushy, fluffy pieces with ragged, torn borders. Indicates mild inflammation or rapid intestinal transit.", color: "text-amber-700 bg-amber-50 border-amber-200" },
+  { type: 7, name: "Watery, No Solid Pieces", rating: "severe diarrhea", desc: "Entirely liquid, watery stool. Signals high inflammation, potential infection, or severe irritation.", color: "text-red-700 bg-red-50 border-red-200" }
 ];
 
 const DEFAULT_LOGS = [
-  {
-    id: '1',
-    foodName: 'Greek yogurt with blueberries, chia seeds, and oats',
-    calories: 320,
-    carbs: 42,
-    protein: 18,
-    fats: 8,
-    fiber: 8,
-    prebiotics: 3,
-    probiotics: true,
-    fermented: true,
-    vitamins: ['Vitamin C', 'Vitamin B12', 'Calcium'],
-    minerals: ['Magnesium', 'Potassium', 'Phosphorus'],
-    plantDiversityPoints: 3,
-    timestamp: new Date(Date.now() - 4 * 60 * 60 * 1000).toISOString()
+  { 
+    id: "1", 
+    food: "Steel-cut oatmeal with fresh blueberries, ground chia seeds, and organic honey", 
+    fats: 6, 
+    carbs: 45, 
+    protein: 10, 
+    vitamins: "Iron, Vitamin B1, Magnesium", 
+    fiber: 12, 
+    prebiotics: "Beta-glucan, Mucilage", 
+    probiotics: "None", 
+    score: 95, 
+    timestamp: "2026-05-18T08:30:00.000Z" 
   },
-  {
-    id: '2',
-    foodName: 'Sourdough toast with sliced avocado and garlic-sautéed spinach',
-    calories: 410,
-    carbs: 35,
-    protein: 12,
-    fats: 22,
-    fiber: 9,
-    prebiotics: 4,
-    probiotics: false,
-    fermented: true,
-    vitamins: ['Vitamin A', 'Vitamin K', 'Vitamin E', 'Folate'],
-    minerals: ['Iron', 'Potassium', 'Magnesium'],
-    plantDiversityPoints: 4,
-    timestamp: new Date(Date.now() - 8 * 60 * 60 * 1000).toISOString()
+  { 
+    id: "2", 
+    food: "Sourdough bread toast with mashed avocado, pumpkin seeds, and fermented kimchi", 
+    fats: 14, 
+    carbs: 32, 
+    protein: 9, 
+    vitamins: "Vitamin K, Folate, Zinc", 
+    fiber: 8, 
+    prebiotics: "Inulin, Resistant starch", 
+    probiotics: "Lactobacillus, Leuconostoc", 
+    score: 90, 
+    timestamp: "2026-05-18T13:15:00.000Z" 
+  },
+  { 
+    id: "3", 
+    food: "Wild-caught salmon salad with steamed asparagus, artichoke hearts, spinach, and extra virgin olive oil", 
+    fats: 22, 
+    carbs: 12, 
+    protein: 34, 
+    vitamins: "Vitamin D, Vitamin B12, Potassium", 
+    fiber: 10, 
+    prebiotics: "Inulin, FOS", 
+    probiotics: "None", 
+    score: 88, 
+    timestamp: "2026-05-18T19:00:00.000Z" 
   }
 ];
 
+const MICROBES_INFO = [
+  { name: "Bifidobacteria", category: "Good", desc: "Thrives on prebiotic starches and fibers (oats, onions, bananas). Key for producing anti-inflammatory acetate.", color: "#10b981" },
+  { name: "Lactobacillus", category: "Good", desc: "Common in fermented foods (yogurt, kefir, sauerkraut). Produces lactic acid, maintaining an acidic barrier against pathogens.", color: "#3b82f6" },
+  { name: "Akkermansia", category: "Good", desc: "Feeds on your natural mucus layer, encouraging gut lining regeneration. Boosted by polyphenols like green tea and berries.", color: "#6366f1" },
+  { name: "Sugar-Feeders", category: "Opportunistic", desc: "Thrive on ultra-processed sweets and refined flour. High populations can crowd out good microbes and trigger low-grade bloating.", color: "#f59e0b" }
+];
+
+const SECURITY_QUESTIONS = [
+  "What is your favorite gut-friendly prebiotic food?",
+  "What was the name of your first childhood pet?",
+  "In what city or town were you born?",
+  "What was the brand of your first vehicle?",
+  "What is your mother's maiden name?"
+];
+
+
 export default function App() {
-  const [activeTab, setActiveTab] = useState('dashboard');
-  
-  // Authentication & Users State
   const [currentUser, setCurrentUser] = useState(() => {
     const saved = localStorage.getItem('mycobiome_current_user');
     return saved ? JSON.parse(saved) : null;
   });
-  const [authMode, setAuthMode] = useState('login'); // 'login' or 'signup'
+  const [authMode, setAuthMode] = useState('login'); // 'login', 'signup', 'forgot_password'
   const [authEmail, setAuthEmail] = useState('');
   const [authPassword, setAuthPassword] = useState('');
   const [authName, setAuthName] = useState('');
+  const [authSecurityQuestion, setAuthSecurityQuestion] = useState(SECURITY_QUESTIONS[0]);
+  const [authSecurityAnswer, setAuthSecurityAnswer] = useState('');
   const [showAuthModal, setShowAuthModal] = useState(false);
 
-  // User-dependent States (Initially loaded from default, synced with current user account)
+  const [recoveredQuestion, setRecoveredQuestion] = useState('');
+  const [recoveryAnswerAttempt, setRecoveryAnswerAttempt] = useState('');
+  const [recoveryEmail, setRecoveryEmail] = useState('');
+  const [newPassword, setNewPassword] = useState('');
+  const [recoveryStep, setRecoveryStep] = useState(1); // 1: enter email, 2: answer question
+
+  const [showSyncModal, setShowSyncModal] = useState(false);
+  const [syncPinCode, setSyncPinCode] = useState('');
+  const [syncCodeToRetrieve, setSyncCodeToRetrieve] = useState('');
+  const [manualBackupString, setManualBackupString] = useState('');
+  const [manualImportString, setManualImportString] = useState('');
+  const [isSyncing, setIsSyncing] = useState(false);
+
+  const [activeTab, setActiveTab] = useState("dashboard"); // dashboard, food, symptoms, education
+  const [customApiKey, setCustomApiKey] = useState(() => localStorage.getItem("mycobiome_api_key") || "");
+  const [showSettings, setShowSettings] = useState(false);
+
   const [foodLogs, setFoodLogs] = useState(DEFAULT_LOGS);
-  
-  // New: Chronological Symptom Logs array
   const [symptomLogs, setSymptomLogs] = useState([]);
 
-  // Editable Form states for each distinct metric
   const [stoolTimestamp, setStoolTimestamp] = useState(() => new Date().toISOString().slice(0, 16));
   const [stoolNotes, setStoolNotes] = useState('');
 
@@ -139,81 +153,50 @@ export default function App() {
   const [stressLevel, setStressLevel] = useState(2); 
   const [aiReport, setAiReport] = useState(null);
 
-  // Custom Food Entry State
   const [foodInput, setFoodInput] = useState('');
-  
-  // Manual Entry Form State
-  const [manualForm, setManualForm] = useState({
-    foodName: '',
-    calories: 250,
-    carbs: 30,
-    protein: 10,
-    fats: 8,
-    fiber: 5,
-    prebiotics: 2,
-    probiotics: false,
-    fermented: false,
-    vitamins: '',
-    minerals: '',
-    plantDiversityPoints: 1
-  });
+  const [isAnalyzing, setIsAnalyzing] = useState(false);
 
-  // Daily Synthesis / Microbiome AI State
-  const [generatingReport, setGeneratingReport] = useState(false);
+  const canvasRef = useRef(null);
+  const [toastMessage, setToastMessage] = useState(null);
 
-  // Notifications
-  const [notification, setNotification] = useState(null);
-
-  // API Key Settings States
-  const [apiKey, setApiKey] = useState(() => localStorage.getItem('mycobiome_api_key') || '');
-  const [apiKeyInput, setApiKeyInput] = useState(apiKey);
-  const [isSettingsOpen, setIsSettingsOpen] = useState(false);
-
-  // Helper: Trigger notifications
-  const showNotification = (message, type = 'success') => {
-    setNotification({ message, type });
-    setTimeout(() => {
-      setNotification(null);
-    }, 4500);
+  const showNotification = (msg) => {
+    setToastMessage(msg);
+    setTimeout(() => setToastMessage(null), 3500);
   };
 
-  // ----------------------------------------------------
-  // MULTI-USER STORAGE SYSTEM LOGIC
-  // ----------------------------------------------------
-  
-  // Helper to get raw users database
+
   const getDatabase = () => {
     const db = localStorage.getItem('mycobiome_user_database');
     return db ? JSON.parse(db) : {};
   };
 
-  // Sync user's data package to database when changes occur
   useEffect(() => {
     if (currentUser) {
       const db = getDatabase();
-      db[currentUser.email] = {
-        ...db[currentUser.email],
-        foodLogs,
-        symptomLogs, // Keep track of chronological symptom timeline
-        waterIntake,
-        bloatingLevel,
-        energyLevel,
-        stoolType,
-        sleepHours,
-        stressLevel,
-        aiReport
-      };
-      localStorage.setItem('mycobiome_user_database', JSON.stringify(db));
+      if (db[currentUser.email]) {
+        db[currentUser.email] = {
+          ...db[currentUser.email],
+          foodLogs,
+          symptomLogs, 
+          waterIntake,
+          bloatingLevel,
+          energyLevel,
+          stoolType,
+          sleepHours,
+          stressLevel,
+          aiReport
+        };
+        localStorage.setItem('mycobiome_user_database', JSON.stringify(db));
+      }
     }
   }, [currentUser, foodLogs, symptomLogs, waterIntake, bloatingLevel, energyLevel, stoolType, sleepHours, stressLevel, aiReport]);
 
-  // Load user data upon logging in
   const loadUserData = (email) => {
     const db = getDatabase();
     const userData = db[email];
     if (userData) {
       setFoodLogs(userData.foodLogs || []);
-      setSymptomLogs(userData.symptomLogs || []); // Load history
+      setSymptomLogs(userData.symptomLogs || []); 
       setWaterIntake(userData.waterIntake ?? 4);
       setBloatingLevel(userData.bloatingLevel ?? 2);
       setEnergyLevel(userData.energyLevel ?? 4);
@@ -222,7 +205,6 @@ export default function App() {
       setStressLevel(userData.stressLevel ?? 2);
       setAiReport(userData.aiReport || null);
     } else {
-      // Default fallback
       setFoodLogs(DEFAULT_LOGS);
       setSymptomLogs([]);
       setWaterIntake(4);
@@ -237,21 +219,23 @@ export default function App() {
 
   const handleRegister = (e) => {
     e.preventDefault();
-    if (!authEmail || !authPassword || !authName) {
-      showNotification('Please fill in all registration fields.', 'error');
+    if (!authEmail || !authPassword || !authName || !authSecurityAnswer) {
+      showNotification('Please fill in all fields including the Security Question!');
       return;
     }
     const db = getDatabase();
     if (db[authEmail]) {
-      showNotification('An account with this email already exists.', 'error');
+      showNotification('Account with this email already exists!');
       return;
     }
 
-    // Save user info
-    const newUser = { email: authEmail, name: authName, password: authPassword };
     db[authEmail] = {
-      profile: newUser,
+      name: authName,
+      password: authPassword, 
+      securityQuestion: authSecurityQuestion,
+      securityAnswer: authSecurityAnswer.trim().toLowerCase(),
       foodLogs: DEFAULT_LOGS,
+      symptomLogs: [],
       waterIntake: 4,
       bloatingLevel: 2,
       energyLevel: 4,
@@ -260,44 +244,44 @@ export default function App() {
       stressLevel: 2,
       aiReport: null
     };
-
     localStorage.setItem('mycobiome_user_database', JSON.stringify(db));
-    setCurrentUser(newUser);
-    localStorage.setItem('mycobiome_current_user', JSON.stringify(newUser));
+    
+    const userObj = { email: authEmail, name: authName };
+    setCurrentUser(userObj);
+    localStorage.setItem('mycobiome_current_user', JSON.stringify(userObj));
     loadUserData(authEmail);
     setShowAuthModal(false);
-    showNotification(`Welcome to MycoBiome, ${authName}! Account created.`);
     clearAuthFields();
+    showNotification(`Welcome, ${authName}! Account created successfully.`);
   };
 
   const handleLogin = (e) => {
     e.preventDefault();
     if (!authEmail || !authPassword) {
-      showNotification('Please fill in your login credentials.', 'error');
+      showNotification('Please enter email and password!');
       return;
     }
     const db = getDatabase();
-    const userAccount = db[authEmail];
-
-    if (!userAccount || userAccount.profile?.password !== authPassword) {
-      showNotification('Invalid email or password.', 'error');
+    const userRecord = db[authEmail];
+    if (!userRecord || userRecord.password !== authPassword) {
+      showNotification('Invalid email or password!');
       return;
     }
 
-    const matchedUser = userAccount.profile;
-    setCurrentUser(matchedUser);
-    localStorage.setItem('mycobiome_current_user', JSON.stringify(matchedUser));
+    const userObj = { email: authEmail, name: userRecord.name };
+    setCurrentUser(userObj);
+    localStorage.setItem('mycobiome_current_user', JSON.stringify(userObj));
     loadUserData(authEmail);
     setShowAuthModal(false);
-    showNotification(`Welcome back, ${matchedUser.name}!`);
     clearAuthFields();
+    showNotification(`Welcome back, ${userRecord.name}!`);
   };
 
   const handleLogout = () => {
     setCurrentUser(null);
     localStorage.removeItem('mycobiome_current_user');
-    // Revert to local transient defaults
     setFoodLogs(DEFAULT_LOGS);
+    setSymptomLogs([]);
     setWaterIntake(4);
     setBloatingLevel(2);
     setEnergyLevel(4);
@@ -312,9 +296,163 @@ export default function App() {
     setAuthEmail('');
     setAuthPassword('');
     setAuthName('');
+    setAuthSecurityAnswer('');
+    setRecoveryEmail('');
+    setRecoveryAnswerAttempt('');
+    setNewPassword('');
+    setRecoveryStep(1);
   };
 
-  // Helper to handle submitting a symptom log with editable timestamp and notes
+  const handleInitiateRecovery = (e) => {
+    e.preventDefault();
+    if (!recoveryEmail) {
+      showNotification('Please enter your registration email.');
+      return;
+    }
+    const db = getDatabase();
+    const record = db[recoveryEmail];
+    if (!record) {
+      showNotification('No registered user found with that email.');
+      return;
+    }
+    
+    setRecoveredQuestion(record.securityQuestion || "What is your favorite gut-friendly prebiotic food?");
+    setRecoveryStep(2);
+    showNotification('User found. Please answer your recovery question.');
+  };
+
+  const handleCompleteRecovery = (e) => {
+    e.preventDefault();
+    if (!recoveryAnswerAttempt || !newPassword) {
+      showNotification('Please fill out all fields.');
+      return;
+    }
+    const db = getDatabase();
+    const record = db[recoveryEmail];
+    
+    if (!record) {
+      showNotification('Error during recovery session. Please try again.');
+      return;
+    }
+
+    const savedAnswer = record.securityAnswer || "";
+    if (savedAnswer.trim().toLowerCase() !== recoveryAnswerAttempt.trim().toLowerCase()) {
+      showNotification('Incorrect security answer! Access denied.');
+      return;
+    }
+
+    db[recoveryEmail] = {
+      ...record,
+      password: newPassword
+    };
+    localStorage.setItem('mycobiome_user_database', JSON.stringify(db));
+    showNotification('Password successfully reset! Please sign in with your new password.');
+    setAuthMode('login');
+    clearAuthFields();
+  };
+
+
+  const handleGenerateCloudSync = async () => {
+    setIsSyncing(true);
+    try {
+      const db = getDatabase();
+      const payloadString = JSON.stringify(db);
+      
+      const alphabet = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+      let pin = '';
+      for (let i = 0; i < 6; i++) {
+        pin += alphabet.charAt(Math.floor(Math.random() * alphabet.length));
+      }
+
+      const response = await fetch(`https://kvdb.io/t9D3h8Fv5Xk8N2/sync_${pin}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: payloadString
+      });
+
+      if (!response.ok) throw new Error('Cloud vault connection rejected.');
+
+      setSyncPinCode(pin);
+      
+      const encoded = btoa(unescape(encodeURIComponent(payloadString)));
+      setManualBackupString(encoded);
+      showNotification(`Cloud sync generated! PIN: ${pin}`);
+    } catch (err) {
+      console.error(err);
+      const db = getDatabase();
+      const encoded = btoa(unescape(encodeURIComponent(JSON.stringify(db))));
+      setManualBackupString(encoded);
+      showNotification('Cloud service blocked. Copy the Manual Backup Code instead!');
+    } finally {
+      setIsSyncing(false);
+    }
+  };
+
+  const handleRetrieveCloudSync = async () => {
+    if (!syncCodeToRetrieve.trim()) {
+      showNotification('Please enter a 6-character PIN code.');
+      return;
+    }
+    setIsSyncing(true);
+    const formattedPin = syncCodeToRetrieve.trim().toUpperCase();
+
+    try {
+      const response = await fetch(`https://kvdb.io/t9D3h8Fv5Xk8N2/sync_${formattedPin}`);
+      if (!response.ok) {
+        throw new Error('Sync PIN not found or expired.');
+      }
+      
+      const importedDb = await response.json();
+      if (typeof importedDb !== 'object' || Array.isArray(importedDb)) {
+        throw new Error('Invalid database format.');
+      }
+
+      const localDb = getDatabase();
+      const mergedDb = { ...localDb, ...importedDb };
+      localStorage.setItem('mycobiome_user_database', JSON.stringify(mergedDb));
+
+      showNotification('Success! All accounts successfully imported & synced!');
+      setSyncCodeToRetrieve('');
+      setShowSyncModal(false);
+      
+      if (currentUser && mergedDb[currentUser.email]) {
+        loadUserData(currentUser.email);
+      }
+    } catch (err) {
+      console.error(err);
+      showNotification('Error: Unable to find or verify PIN. Check code or use manual fallback.');
+    } finally {
+      setIsSyncing(false);
+    }
+  };
+
+  const handleManualImport = () => {
+    if (!manualImportString.trim()) {
+      showNotification('Please paste a backup code.');
+      return;
+    }
+    try {
+      const decodedString = decodeURIComponent(escape(atob(manualImportString.trim())));
+      const parsedDb = JSON.parse(decodedString);
+      
+      const localDb = getDatabase();
+      const mergedDb = { ...localDb, ...parsedDb };
+      localStorage.setItem('mycobiome_user_database', JSON.stringify(mergedDb));
+
+      showNotification('Success! Profiles imported manually successfully!');
+      setManualImportString('');
+      setShowSyncModal(false);
+      
+      if (currentUser && mergedDb[currentUser.email]) {
+        loadUserData(currentUser.email);
+      }
+    } catch (err) {
+      console.error(err);
+      showNotification('Invalid backup code. Please ensure you copied the entire string correctly.');
+    }
+  };
+
+
   const handleAddSymptomLog = (type, value, timestamp, notes, clearNotesFn) => {
     const newLog = {
       id: Date.now().toString() + '-' + Math.random().toString(36).substr(2, 9),
@@ -327,8 +465,6 @@ export default function App() {
     const updatedLogs = [newLog, ...symptomLogs];
     setSymptomLogs(updatedLogs);
 
-    // If this newly submitted log is mathematically the most recent log of this type,
-    // update the immediate dashboard/score states
     const logsOfType = updatedLogs.filter(log => log.type === type);
     const sortedLogs = [...logsOfType].sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
     if (sortedLogs[0]?.id === newLog.id) {
@@ -344,13 +480,11 @@ export default function App() {
     if (clearNotesFn) clearNotesFn('');
   };
 
-  // Helper to delete historical symptom logs
   const handleDeleteSymptomLog = (id) => {
     const updatedLogs = symptomLogs.filter(log => log.id !== id);
     setSymptomLogs(updatedLogs);
     showNotification('Symptom entry removed.');
 
-    // Re-calculate the current display values based on remaining logs
     ['stool', 'bloating', 'energy', 'sleep', 'stress', 'water'].forEach(type => {
       const logsOfType = updatedLogs.filter(log => log.type === type);
       if (logsOfType.length > 0) {
@@ -366,553 +500,915 @@ export default function App() {
     });
   };
 
-  // ----------------------------------------------------
-  // SETTINGS & METRICS LOGIC
-  // ----------------------------------------------------
-
   const saveApiKey = (e) => {
     e.preventDefault();
-    const trimmedKey = apiKeyInput.trim();
-    localStorage.setItem('mycobiome_api_key', trimmedKey);
-    setApiKey(trimmedKey);
-    setIsSettingsOpen(false);
-    showNotification('Gemini API Key saved securely inside local browser storage!');
+    localStorage.setItem("mycobiome_api_key", customApiKey);
+    setShowSettings(false);
+    showNotification("Gemini API key successfully saved!");
   };
 
-  const getActiveApiKey = () => {
-    let envKey = '';
-    try {
-      const safeMeta = new Function('return import.meta')();
-      if (safeMeta && safeMeta.env) {
-        envKey = safeMeta.env.VITE_GEMINI_API_KEY || '';
-      }
-    } catch (e) {}
-    return apiKey || envKey || '';
-  };
+  const calculateWellBeingScore = () => {
+    let score = 75; 
 
-  const dailyTotals = foodLogs.reduce((acc, log) => {
-    acc.calories += log.calories || 0;
-    acc.carbs += log.carbs || 0;
-    acc.protein += log.protein || 0;
-    acc.fats += log.fats || 0;
-    acc.fiber += log.fiber || 0;
-    acc.prebiotics += log.prebiotics || 0;
-    if (log.probiotics) acc.probioticsCount += 1;
-    if (log.fermented) acc.fermentedCount += 1;
-    acc.plantDiversity += log.plantDiversityPoints || 0;
-    return acc;
-  }, { calories: 0, carbs: 0, protein: 0, fats: 0, fiber: 0, prebiotics: 0, probioticsCount: 0, fermentedCount: 0, plantDiversity: 0 });
+    const totalFiberLogged = foodLogs.reduce((acc, log) => acc + log.fiber, 0);
+    score += Math.min(totalFiberLogged * 1.5, 15);
 
-  const targets = {
-    calories: 2000,
-    carbs: 250,
-    protein: 65,
-    fats: 70,
-    fiber: 30, 
-    prebiotics: 8, 
-    water: 8, 
-    plantDiversity: 30 
-  };
-
-  const calculateMicrobiomeScore = () => {
-    const fiberScore = Math.min((dailyTotals.fiber / targets.fiber) * 100, 100);
-    const prebioticScore = Math.min((dailyTotals.prebiotics / targets.prebiotics) * 100, 100);
-    const probioScore = Math.min(((dailyTotals.probioticsCount * 40) + (dailyTotals.fermentedCount * 25)), 100);
-    const hydrationScore = Math.min((waterIntake / targets.water) * 100, 100);
-    
-    let stoolScore = 50;
-    if (stoolType === 3 || stoolType === 4) stoolScore = 100;
-    else if (stoolType === 2 || stoolType === 5) stoolScore = 75;
-    else if (stoolType === 1 || stoolType === 6) stoolScore = 40;
-    else stoolScore = 15;
-
-    const lifestyleScore = ((6 - stressLevel) * 10) + (Math.min(sleepHours / 8, 1.2) * 50);
-
-    const rawScore = (fiberScore * 0.3) + (prebioticScore * 0.2) + (probioScore * 0.15) + (hydrationScore * 0.1) + (stoolScore * 0.1) + (lifestyleScore * 0.15);
-    return Math.round(Math.min(rawScore, 100));
-  };
-
-  const microbiomeScore = calculateMicrobiomeScore();
-
-  const getMicrobeStatus = () => {
-    const fiberRatio = dailyTotals.fiber / targets.fiber;
-    const prebioticRatio = dailyTotals.prebiotics / targets.prebiotics;
-    const probioticRatio = (dailyTotals.probioticsCount + dailyTotals.fermentedCount) / 2;
-
-    return {
-      bifido: {
-        population: Math.min(15 + Math.round(prebioticRatio * 15), 35),
-        mood: prebioticRatio > 0.8 ? 'happy' : prebioticRatio > 0.4 ? 'neutral' : 'sluggish',
-        color: '#3b82f6',
-        label: 'Bifidobacteria (Fiber-Lovers)'
-      },
-      lacto: {
-        population: Math.min(10 + Math.round(probioticRatio * 20), 30),
-        mood: probioticRatio > 0.7 ? 'happy' : probioticRatio > 0.3 ? 'neutral' : 'sluggish',
-        color: '#ec4899',
-        label: 'Lactobacillus (Ferment-Lovers)'
-      },
-      akkermansia: {
-        population: Math.min(5 + Math.round(fiberRatio * 15), 20),
-        mood: fiberRatio > 1.0 ? 'happy' : fiberRatio > 0.5 ? 'neutral' : 'starving',
-        color: '#10b981',
-        label: 'Akkermansia muciniphila (Gut Barrier Protectors)'
-      },
-      opportunistic: {
-        population: Math.max(25 - Math.round(fiberRatio * 15), 5),
-        mood: fiberRatio < 0.4 ? 'aggressive' : 'dormant',
-        color: '#f59e0b',
-        label: 'Opportunistic Bacteroidetes (Sugar Lovers)'
-      }
-    };
-  };
-
-  const microbes = getMicrobeStatus();
-
-  // ----------------------------------------------------
-  // GEMINI AI NUTRITION & SYMPTOMS API CALLS
-  // ----------------------------------------------------
-
-  const handleAIFoodParse = async (e) => {
-    e.preventDefault();
-    
-    const activeKey = getActiveApiKey();
-    if (!activeKey) {
-      setIsSettingsOpen(true);
-      showNotification('Please configure your Gemini API Key first to unlock AI Analysis.', 'error');
-      return;
+    if (stoolType === 3 || stoolType === 4) {
+      score += 10;
+    } else if (stoolType === 1 || stoolType === 7) {
+      score -= 15;
+    } else {
+      score -= 5;
     }
 
-    if (!foodInput && !imageInput) {
-      showNotification('Please provide a text log or select an image first.', 'error');
-      return;
-    }
+    score -= (bloatingLevel - 1) * 3;
+    score += (energyLevel - 3) * 3;
+    score -= (stressLevel - 2) * 2;
+    score += Math.min(waterIntake * 1.5, 10);
 
-    setAnalyzingFood(true);
-    try {
-      const systemPrompt = `
-        You are a clinical nutritionist and expert in digestive microbiome health. 
-        Analyze the meal given by the user (which can be a text description or base64 image data).
-        Extract accurate estimated nutrient macros, fibers, prebiotics, probiotics (fermented/live cultures), key vitamins, minerals, and plant-based ingredient diversity counts.
-        Respond STRICTLY with a valid JSON matching this schema:
-        {
-          "foodName": "A descriptive name of the food logged",
-          "calories": number,
-          "carbs": number,
-          "protein": number,
-          "fats": number,
-          "fiber": number,
-          "prebiotics": number,
-          "probiotics": boolean,
-          "fermented": boolean,
-          "vitamins": ["Vitamin A", "Vitamin C"],
-          "minerals": ["Calcium", "Magnesium"],
-          "plantDiversityPoints": number (How many distinct plant-based ingredients/species are in this meal, e.g., grains, seeds, veggies, fruit, herbs)
-        }
-      `;
-
-      let payload;
-      let modelUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${activeKey}`;
-
-      if (imageInput) {
-        const base64CleanData = imageInput.split(',')[1];
-        payload = {
-          contents: [
-            {
-              role: "user",
-              parts: [
-                { text: `Analyze this image of a food meal. Fallback text context: ${foodInput || 'No context'}` },
-                {
-                  inlineData: {
-                    mimeType: "image/png",
-                    data: base64CleanData
-                  }
-                }
-              ]
-            }
-          ],
-          generationConfig: {
-            responseMimeType: "application/json",
-          },
-          systemInstruction: {
-            parts: [{ text: systemPrompt }]
-          }
-        };
-      } else {
-        payload = {
-          contents: [{ parts: [{ text: `Analyze this food: "${foodInput}"` }] }],
-          generationConfig: {
-            responseMimeType: "application/json",
-          },
-          systemInstruction: {
-            parts: [{ text: systemPrompt }]
-          }
-        };
-      }
-
-      const response = await fetch(modelUrl, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload)
-      });
-
-      if (!response.ok) {
-        throw new Error('Failed to fetch analysis from Gemini API.');
-      }
-
-      const data = await response.json();
-      const textOutput = data?.candidates?.[0]?.content?.parts?.[0]?.text;
-      
-      if (textOutput) {
-        const parsedFood = JSON.parse(textOutput);
-        const newLog = {
-          ...parsedFood,
-          id: Date.now().toString(),
-          timestamp: new Date().toISOString()
-        };
-        setFoodLogs([newLog, ...foodLogs]);
-        showNotification(`Successfully analyzed & logged: "${parsedFood.foodName}"!`);
-        setFoodInput('');
-        setImageInput(null);
-      } else {
-        throw new Error('Unexpected JSON structure from API.');
-      }
-    } catch (err) {
-      console.error(err);
-      showNotification('AI analysis failed. Please verify your API Key, use manual input, or try again.', 'error');
-    } finally {
-      setAnalyzingFood(false);
-    }
+    return Math.max(15, Math.min(score, 100)); 
   };
 
-  const generateMicrobiomeReport = async () => {
-    const activeKey = getActiveApiKey();
-    if (!activeKey) {
-      setIsSettingsOpen(true);
-      showNotification('Please configure your Gemini API Key first to generate a report.', 'error');
-      return;
-    }
+  const scoreValue = calculateWellBeingScore();
 
-    setGeneratingReport(true);
-    try {
-      const formattedLogs = foodLogs.map(log => 
-        `- ${log.foodName}: ${log.calories}kcal (C:${log.carbs}g, P:${log.protein}g, F:${log.fats}g, Fiber:${log.fiber}g, Prebiotics:${log.prebiotics}g, Probiotics:${log.probiotics ? 'Yes' : 'No'}, Fermented:${log.fermented ? 'Yes' : 'No'}, Plant Diversity:${log.plantDiversityPoints})`
-      ).join('\n');
 
-      const physicalSymptoms = `
-        - Water Intake: ${waterIntake} cups (Target: 8)
-        - Bloating Level: ${bloatingLevel}/5
-        - Energy Level: ${energyLevel}/5
-        - Bristol Stool Type: Type ${stoolType} (${BRISTOL_STOOL_CHART.find(c => c.type === stoolType)?.name})
-        - Sleep Hours: ${sleepHours} hours
-        - Stress Level: ${stressLevel}/5
-      `;
+  useEffect(() => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
 
-      const userPrompt = `
-        Today's Nutritional Logs:
-        ${formattedLogs}
+    const ctx = canvas.getContext("2d");
+    let animationFrameId;
 
-        Today's Bio/Lifestyle Symptoms:
-        ${physicalSymptoms}
+    const calculateMicrobeSettings = () => {
+      const fiberScore = foodLogs.reduce((acc, log) => acc + log.fiber, 0);
+      const isPerfectStool = stoolType === 3 || stoolType === 4;
 
-        Analyze this information as an advanced gastrointestinal microbiologist and dietitian. Predict the state of their digestive microbiome, name key bacterial species likely thriving or suffering, discuss systemic wellness connections (like mucosal barrier and gut-brain axis), provide detailed dietary recommendations to optimize their gut, and craft a delicious "Microbiome Power Recipe" with clear preparation instructions.
-      `;
+      const bifidoCount = Math.max(5, Math.min(25, 5 + fiberScore + (isPerfectStool ? 5 : 0)));
+      const lactoCount = Math.max(5, Math.min(25, 6 + (waterIntake * 2)));
+      const akkerCount = Math.max(3, Math.min(20, 3 + (energyLevel * 2.5) - bloatingLevel));
+      const sugarCount = Math.max(2, Math.min(30, 2 + (stressLevel * 4) + (bloatingLevel * 2) - Math.floor(fiberScore / 3)));
 
-      const systemPrompt = `
-        You are a Gut Microbiome Intelligence AI. Synthesize user logs into a beautifully structured, engaging, and encouraging microbiome diagnostic report.
-        Produce a JSON response strictly matching this schema structure:
-        {
-          "overallStatus": "A summary phrase representing their gut state (e.g. Symbiotic Bliss, Mild Dysbiosis Risk, Highly Starved Microbiome)",
-          "gutMicrobialBreakdown": "Analysis of their Bifidobacteria, Lactobacillus, Akkermansia, etc., mentioning species by name (e.g., Bifidobacterium longum, Akkermansia muciniphila) and how their current meals affected them.",
-          "symptomCorrelation": "A clinical-style explanation of how their physical symptoms (bloating, stool type, energy) relate back to their specific gut health, fiber intake, or stress-associated gut motility changes.",
-          "beneficialAdditions": ["List of 3 specific prebiotic/probiotic foods to add tomorrow"],
-          "reductiveTargets": ["List of 2 items to limit to restore balanced symbiosis"],
-          "microbiomePowerRecipe": {
-            "name": "Creative name for gut healing recipe",
-            "ingredients": ["list of ingredients with prebiotic/probiotic markers"],
-            "benefits": "Short summary of how this recipe directly aids their microbiome",
-            "instructions": "Simple step-by-step instructions to make it"
-          }
-        }
-      `;
-
-      const payload = {
-        contents: [{ parts: [{ text: userPrompt }] }],
-        generationConfig: {
-          responseMimeType: "application/json"
-        },
-        systemInstruction: {
-          parts: [{ text: systemPrompt }]
-        }
-      };
-
-      const modelUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${activeKey}`;
-
-      const response = await fetch(modelUrl, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload)
-      });
-
-      if (!response.ok) {
-        throw new Error('Report generation failed.');
-      }
-
-      const data = await response.json();
-      const textOutput = data?.candidates?.[0]?.content?.parts?.[0]?.text;
-      
-      if (textOutput) {
-        setAiReport(JSON.parse(textOutput));
-        showNotification('Personalized Microbiome synthesis ready!');
-      } else {
-        throw new Error('Parsed response text was empty.');
-      }
-
-    } catch (err) {
-      console.error(err);
-      showNotification('Failed to generate gut report. Please check your API Key and try again.', 'error');
-    } finally {
-      setGeneratingReport(false);
-    }
-  };
-
-  const handleManualLog = (e) => {
-    e.preventDefault();
-    if (!manualForm.foodName.trim()) {
-      showNotification('Please enter a food name.', 'error');
-      return;
-    }
-
-    const newLog = {
-      id: Date.now().toString(),
-      foodName: manualForm.foodName,
-      calories: Number(manualForm.calories) || 0,
-      carbs: Number(manualForm.carbs) || 0,
-      protein: Number(manualForm.protein) || 0,
-      fats: Number(manualForm.fats) || 0,
-      fiber: Number(manualForm.fiber) || 0,
-      prebiotics: Number(manualForm.prebiotics) || 0,
-      probiotics: manualForm.probiotics,
-      fermented: manualForm.fermented,
-      vitamins: manualForm.vitamins ? manualForm.vitamins.split(',').map(v => v.trim()) : [],
-      minerals: manualForm.minerals ? manualForm.minerals.split(',').map(m => m.trim()) : [],
-      plantDiversityPoints: Number(manualForm.plantDiversityPoints) || 0,
-      timestamp: new Date().toISOString()
+      return { bifidoCount, lactoCount, akkerCount, sugarCount };
     };
 
-    setFoodLogs([newLog, ...foodLogs]);
-    showNotification(`Logged: "${manualForm.foodName}" successfully.`);
-    
-    setManualForm({
-      foodName: '',
-      calories: 250,
-      carbs: 30,
-      protein: 10,
-      fats: 8,
-      fiber: 5,
-      prebiotics: 2,
-      probiotics: false,
-      fermented: false,
-      vitamins: '',
-      minerals: '',
-      plantDiversityPoints: 1
-    });
-    setManualMode(false);
-  };
+    const populations = calculateMicrobeSettings();
 
-  const deleteLog = (id) => {
-    setFoodLogs(foodLogs.filter(log => log.id !== id));
-    showNotification('Log entry removed.');
-  };
+    class Microbe {
+      constructor(type, color, radius) {
+        this.type = type;
+        this.color = color;
+        this.radius = radius;
+        this.x = Math.random() * canvas.width;
+        this.y = Math.random() * canvas.height;
+        this.vx = (Math.random() - 0.5) * 0.8;
+        this.vy = (Math.random() - 0.5) * 0.8;
+        this.wigglePhase = Math.random() * Math.PI * 2;
+        this.wiggleSpeed = 0.02 + Math.random() * 0.03;
+      }
 
-  const handleImageUpload = (e) => {
-    const file = e.target.files[0];
-    if (file) {
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        setImageInput(reader.result);
-        showNotification('Meal image uploaded successfully. Ready to parse!');
+      update() {
+        this.x += this.vx;
+        this.y += this.vy;
+
+        this.wigglePhase += this.wiggleSpeed;
+        this.x += Math.sin(this.wigglePhase) * 0.15;
+        this.y += Math.cos(this.wigglePhase) * 0.15;
+
+        if (this.x < this.radius || this.x > canvas.width - this.radius) {
+          this.vx *= -1;
+          this.x = Math.max(this.radius, Math.min(this.x, canvas.width - this.radius));
+        }
+        if (this.y < this.radius || this.y > canvas.height - this.radius) {
+          this.vy *= -1;
+          this.y = Math.max(this.radius, Math.min(this.y, canvas.height - this.radius));
+        }
+      }
+
+      draw() {
+        ctx.beginPath();
+        ctx.shadowBlur = 12;
+        ctx.shadowColor = this.color;
+
+        if (this.type === "Bifidobacteria") {
+          ctx.strokeStyle = this.color;
+          ctx.lineWidth = 4;
+          ctx.lineCap = "round";
+          ctx.moveTo(this.x, this.y);
+          ctx.lineTo(this.x, this.y - this.radius);
+          ctx.moveTo(this.x, this.y);
+          ctx.lineTo(this.x - this.radius * 0.7, this.y + this.radius * 0.7);
+          ctx.moveTo(this.x, this.y);
+          ctx.lineTo(this.x + this.radius * 0.7, this.y + this.radius * 0.7);
+          ctx.stroke();
+        } else if (this.type === "Lactobacillus") {
+          ctx.fillStyle = this.color;
+          ctx.save();
+          ctx.translate(this.x, this.y);
+          const angle = Math.atan2(this.vy, this.vx);
+          ctx.rotate(angle);
+          ctx.roundRect(-this.radius * 1.5, -this.radius * 0.6, this.radius * 3, this.radius * 1.2, this.radius * 0.6);
+          ctx.fill();
+          ctx.restore();
+        } else if (this.type === "Akkermansia") {
+          ctx.fillStyle = this.color;
+          ctx.beginPath();
+          ctx.ellipse(this.x, this.y, this.radius * 1.4, this.radius * 0.9, Math.PI / 4, 0, Math.PI * 2);
+          ctx.fill();
+        } else {
+          ctx.fillStyle = this.color;
+          const spikes = 8;
+          const outerRad = this.radius * 1.2;
+          const innerRad = this.radius * 0.6;
+          let rot = (Math.PI / 2) * 3;
+          let cx = this.x;
+          let cy = this.y;
+          let step = Math.PI / spikes;
+
+          ctx.beginPath();
+          ctx.moveTo(cx, cy - outerRad);
+          for (let i = 0; i < spikes; i++) {
+            let sx = cx + Math.cos(rot) * outerRad;
+            let sy = cy + Math.sin(rot) * outerRad;
+            ctx.lineTo(sx, sy);
+            rot += step;
+
+            sx = cx + Math.cos(rot) * innerRad;
+            sy = cy + Math.sin(rot) * innerRad;
+            ctx.lineTo(sx, sy);
+            rot += step;
+          }
+          ctx.lineTo(cx, cy - outerRad);
+          ctx.closePath();
+          ctx.fill();
+        }
+
+        ctx.shadowBlur = 0; 
+      }
+    }
+
+    const microbes = [];
+
+    for (let i = 0; i < populations.bifidoCount; i++) {
+      microbes.push(new Microbe("Bifidobacteria", "#10b981", 6 + Math.random() * 4));
+    }
+    for (let i = 0; i < populations.lactoCount; i++) {
+      microbes.push(new Microbe("Lactobacillus", "#06b6d4", 5 + Math.random() * 4));
+    }
+    for (let i = 0; i < populations.akkerCount; i++) {
+      microbes.push(new Microbe("Akkermansia", "#8b5cf6", 4 + Math.random() * 3));
+    }
+    for (let i = 0; i < populations.sugarCount; i++) {
+      microbes.push(new Microbe("SugarFeeders", "#f59e0b", 6 + Math.random() * 3));
+    }
+
+    const resizeCanvas = () => {
+      const rect = canvas.getBoundingClientRect();
+      canvas.width = rect.width;
+      canvas.height = rect.height;
+    };
+    resizeCanvas();
+    window.addEventListener("resize", resizeCanvas);
+
+    const render = () => {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      microbes.forEach((microbe) => {
+        microbe.update();
+        microbe.draw();
+      });
+      animationFrameId = requestAnimationFrame(render);
+    };
+
+    render();
+
+    return () => {
+      cancelAnimationFrame(animationFrameId);
+      window.removeEventListener("resize", resizeCanvas);
+    };
+  }, [foodLogs, stoolType, bloatingLevel, energyLevel, stressLevel, waterIntake, activeTab]);
+
+
+  const handleAnalyzeFood = async () => {
+    if (!foodInput.trim()) {
+      showNotification("Please enter food details or notes to analyze!");
+      return;
+    }
+
+    const activeKey = customApiKey || import.meta.env.VITE_GEMINI_API_KEY;
+
+    if (!activeKey) {
+      showNotification("Missing Gemini API Key! Please enter one using the Settings gear in the header.");
+      setShowSettings(true);
+      return;
+    }
+
+    setIsAnalyzing(true);
+    try {
+      const prompt = `You are a molecular gut microbiome specialist and clinical nutritionist. 
+Analyze this custom food logging description: "${foodInput}". 
+Provide a strictly formatted JSON output containing:
+{
+  "foodName": "Short descriptive simplified name of food logged",
+  "fats": "estimated fats in numerical grams only",
+  "carbs": "estimated carbohydrates in numerical grams only",
+  "protein": "estimated protein in numerical grams only",
+  "vitamins": "list of prominent vitamins and minerals found in this food (e.g. Vitamin C, Potassium, Magnesium, Zinc, Iron, B-Vitamins)",
+  "fiber": "estimated fiber amount in numerical grams only",
+  "prebiotics": "names of prebiotics present (e.g. Inulin, FOS, Resistant Starch) or 'None'",
+  "probiotics": "names of active live bacteria strains (e.g. Lactobacillus bulgaricus, Bifidobacterium lactis) or 'None'",
+  "score": "estimated dynamic microbiome health score out of 100 based on plant diversity, prebiotic presence, lack of ultra-processing"
+}
+Do not return any conversational introductory text, only the raw JSON.`;
+
+      const response = await fetch(
+        `https://generativelink.googleapis.com/v1beta/models/gemini-pro:generateContent?key=${activeKey}`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ contents: [{ parts: [{ text: prompt }] }] })
+        }
+      );
+
+      const data = await response.json();
+      const rawText = data.candidates?.[0]?.content?.parts?.[0]?.text || "";
+      
+      const cleanJson = rawText.replace(/```json/g, "").replace(/```/g, "").trim();
+      const parsed = JSON.parse(cleanJson);
+
+      const newLog = {
+        id: Date.now().toString(),
+        food: parsed.foodName || foodInput,
+        fats: parseInt(parsed.fats) || 4,
+        carbs: parseInt(parsed.carbs) || 12,
+        protein: parseInt(parsed.protein) || 6,
+        vitamins: parsed.vitamins || "None",
+        fiber: parseInt(parsed.fiber) || 2,
+        prebiotics: parsed.prebiotics || "Unknown",
+        probiotics: parsed.probiotics || "None",
+        score: parseInt(parsed.score) || 60,
+        timestamp: new Date().toISOString()
       };
-      reader.readAsDataURL(file);
+
+      setFoodLogs([newLog, ...foodLogs]);
+      setFoodInput("");
+      showNotification("Food successfully analyzed & added to microbiome timeline!");
+    } catch (err) {
+      console.error(err);
+      showNotification("Error parsing food with Gemini. Added entry manually as default.");
+      const fallbackLog = {
+        id: Date.now().toString(),
+        food: foodInput,
+        fats: 5,
+        carbs: 15,
+        protein: 5,
+        vitamins: "Vitamin C, Magnesium",
+        fiber: 3,
+        prebiotics: "Insoluble fiber",
+        probiotics: "None",
+        score: 65,
+        timestamp: new Date().toISOString()
+      };
+      setFoodLogs([fallbackLog, ...foodLogs]);
+      setFoodInput("");
+    } finally {
+      setIsAnalyzing(false);
     }
   };
+
+  const handleGenerateAdvisorReport = async () => {
+    const activeKey = customApiKey || import.meta.env.VITE_GEMINI_API_KEY;
+
+    if (!activeKey) {
+      showNotification("Missing Gemini API Key! Enter it via the gear icon.");
+      setShowSettings(true);
+      return;
+    }
+
+    setIsAnalyzing(true);
+    try {
+      const recentFoodsList = foodLogs.map(l => `${l.food} (Macros - C:${l.carbs}g, P:${l.protein}g, F:${l.fats}g, Fiber: ${l.fiber}g, Prebiotics: ${l.prebiotics})`).join(", ");
+      
+      const prompt = `You are the MycoBiome Chief AI Microbiome Advisor. Synthesize an ultimate personalized gut flora report based on this bio-profile:
+- Stool Type: Bristol Stool Form Type ${stoolType}
+- Water Intake: ${waterIntake} Liters/day
+- Stress Level: ${stressLevel}/5
+- Bloating Rating: ${bloatingLevel}/5
+- Recent Meals Logged: [${recentFoodsList}]
+- Sleep quality: ${sleepHours} hours
+
+Generate a structured feedback report containing:
+1. "predictedMicrobialBalance": Which good bacteria strains are thriving or struggling, and whether opportunistic sugar-feeders are elevated. Include macronutrient impacts (fats, carbs, proteins) on microbial populations.
+2. "nutritionalDeficiencies": What vital prebiotic carbohydrates, plant polyphenols, and micronutrients/vitamins are currently missing or low in this profile.
+3. "digestiveVagusInsights": How their logged stress level and sleep hours are biochemically interacting with their gut motility and bloating via the gut-brain vagus pathway.
+4. "targetedFoodsToIntroduce": List 4 highly specific functional foods (like raw chicory, black tea polyphenols, or Jerusalem artichoke) to restore homeostasis.
+5. "personalizedGutHealerRecipe": Provide a custom fast-preparation microbiome-building recipe tailored directly to address their symptoms (bloating, stool consistency, or high stress). Include dynamic pre/probiotic pairings.
+
+Format the output cleanly in normal conversational paragraphs with distinct headings. Don't use markdown headers (like # or ##) inside the blocks, keep the sections separate and beautifully styled.`;
+
+      const response = await fetch(
+        `https://generativelink.googleapis.com/v1beta/models/gemini-pro:generateContent?key=${activeKey}`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ contents: [{ parts: [{ text: prompt }] }] })
+        }
+      );
+
+      const data = await response.json();
+      const outputText = data.candidates?.[0]?.content?.parts?.[0]?.text || "Unable to retrieve advisor data at this time.";
+      setAiReport(outputText);
+      showNotification("New Gut Advisor Analysis synthesized successfully!");
+    } catch (err) {
+      console.error(err);
+      setAiReport("Unable to synthesize AI report. Check your Gemini API Key parameters or network connection.");
+    } finally {
+      setIsAnalyzing(false);
+    }
+  };
+
 
   return (
     <div className="min-h-screen bg-slate-50 text-slate-800 font-sans antialiased">
-      {/* Visual Notification Banner */}
-      {notification && (
-        <div className={`fixed top-4 left-1/2 transform -translate-x-1/2 z-50 flex items-center gap-2 px-4 py-3 rounded-xl shadow-lg border animate-bounce ${
-          notification.type === 'error' ? 'bg-red-50 border-red-200 text-red-700' : 'bg-emerald-50 border-emerald-200 text-emerald-800'
-        }`}>
-          {notification.type === 'error' ? <AlertCircle className="h-5 w-5" /> : <CheckCircle className="h-5 w-5" />}
-          <span className="text-sm font-medium">{notification.message}</span>
+      
+      {toastMessage && (
+        <div className="fixed bottom-6 right-6 bg-slate-900 border border-slate-800 text-white text-xs font-semibold px-4.5 py-3 rounded-2xl shadow-xl z-50 flex items-center gap-2.5 transition animate-fade-in animate-bounce">
+          <div className="w-2.5 h-2.5 bg-emerald-500 rounded-full animate-ping" />
+          {toastMessage}
         </div>
       )}
 
-      {/* Global API Warning Banner if no key exists */}
-      {!getActiveApiKey() && (
-        <div className="bg-amber-50 border-b border-amber-100 py-2.5 px-4 text-center text-xs text-amber-800 font-medium flex items-center justify-center gap-2">
-          <AlertCircle className="h-4 w-4 text-amber-600 shrink-0" />
-          <span>Gemini AI is offline. Setup your free API Key to enable instant nutrition analysis and reports.</span>
-          <button 
-            onClick={() => setIsSettingsOpen(true)}
-            className="underline hover:text-amber-950 font-bold ml-1"
-          >
-            Configure Key
-          </button>
-        </div>
-      )}
-
-      {/* Account Login/Sign Up Modal */}
-      {showAuthModal && (
-        <div className="fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-          <div className="bg-white rounded-3xl p-6 max-w-md w-full border border-slate-100 shadow-2xl space-y-4 animate-in fade-in zoom-in-95 duration-200">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2 text-slate-900">
-                <User className="h-5 w-5 text-emerald-600" />
-                <h3 className="font-extrabold text-base">
-                  {authMode === 'login' ? 'Welcome Back!' : 'Create Your Account'}
-                </h3>
-              </div>
-              <button 
-                onClick={() => { setShowAuthModal(false); clearAuthFields(); }}
-                className="text-slate-400 hover:text-slate-600 text-sm font-semibold p-1"
-              >
-                ✕
-              </button>
+      <header className="sticky top-0 bg-white/80 backdrop-blur-md border-b border-slate-100 z-40 transition-all duration-300">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-18 flex items-center justify-between">
+          
+          <div className="flex items-center gap-3">
+            <div className="h-10 w-10 bg-emerald-950 rounded-2xl flex items-center justify-center text-emerald-400 shadow-md">
+              <Sparkles className="h-5.5 w-5.5" />
             </div>
+            <div>
+              <h1 className="text-sm font-black text-slate-950 uppercase tracking-widest leading-none flex items-center gap-1.5">
+                MycoBiome <span className="text-[10px] bg-emerald-50 text-emerald-800 px-1.5 py-0.5 rounded-md font-bold uppercase tracking-normal">AI v5</span>
+              </h1>
+              <p className="text-[10px] text-slate-400 font-semibold mt-0.5">Molecular Gut Ecology & Sync Bridge</p>
+            </div>
+          </div>
 
-            <p className="text-xs text-slate-500 leading-relaxed">
-              Create an account to securely save and access your gut tracking logs, water goals, and AI reports even after closing your browser tab.
-            </p>
-
-            <form onSubmit={authMode === 'login' ? handleLogin : handleRegister} className="space-y-3">
-              {authMode === 'signup' && (
-                <div>
-                  <label className="block text-[10px] text-slate-400 font-black uppercase tracking-wider mb-1">Your Name</label>
-                  <div className="relative">
-                    <User className="absolute left-3.5 top-3.5 h-4 w-4 text-slate-400" />
-                    <input 
-                      type="text" 
-                      placeholder="e.g., Alex Carter" 
-                      value={authName}
-                      onChange={(e) => setAuthName(e.target.value)}
-                      className="w-full text-sm pl-10 p-3 rounded-xl border border-slate-200 focus:ring-2 focus:ring-emerald-500 focus:outline-none"
-                    />
-                  </div>
+          <div className="flex items-center gap-2.5">
+            
+            {currentUser ? (
+              <div className="flex items-center gap-2 bg-slate-100/80 rounded-2xl p-1 pr-3 border border-slate-200">
+                <div className="h-7 w-7 bg-emerald-950 text-emerald-400 rounded-xl flex items-center justify-center font-bold text-xs uppercase shadow-sm">
+                  {currentUser.name[0]}
                 </div>
-              )}
-
-              <div>
-                <label className="block text-[10px] text-slate-400 font-black uppercase tracking-wider mb-1">Email Address</label>
-                <div className="relative">
-                  <Mail className="absolute left-3.5 top-3.5 h-4 w-4 text-slate-400" />
-                  <input 
-                    type="email" 
-                    placeholder="name@example.com" 
-                    value={authEmail}
-                    onChange={(e) => setAuthEmail(e.target.value)}
-                    className="w-full text-sm pl-10 p-3 rounded-xl border border-slate-200 focus:ring-2 focus:ring-emerald-500 focus:outline-none"
-                  />
+                <div className="text-left hidden sm:block">
+                  <p className="text-[10px] font-bold text-slate-800 leading-none">{currentUser.name}</p>
+                  <p className="text-[8px] text-slate-400 leading-none mt-0.5">{currentUser.email}</p>
                 </div>
+                <button 
+                  type="button"
+                  onClick={() => setShowSyncModal(true)}
+                  className="text-emerald-700 hover:text-emerald-900 transition p-1 hover:bg-white rounded-lg ml-1"
+                  title="Mobile Sync & Backup Settings"
+                >
+                  <Smartphone className="h-3.5 w-3.5" />
+                </button>
+                <button 
+                  type="button"
+                  onClick={handleLogout}
+                  className="text-slate-400 hover:text-red-500 transition p-1 hover:bg-white rounded-lg ml-0.5"
+                  title="Log Out Account"
+                >
+                  <LogOut className="h-3.5 w-3.5" />
+                </button>
               </div>
-
-              <div>
-                <label className="block text-[10px] text-slate-400 font-black uppercase tracking-wider mb-1">Password</label>
-                <div className="relative">
-                  <Lock className="absolute left-3.5 top-3.5 h-4 w-4 text-slate-400" />
-                  <input 
-                    type="password" 
-                    placeholder="••••••••" 
-                    value={authPassword}
-                    onChange={(e) => setAuthPassword(e.target.value)}
-                    className="w-full text-sm pl-10 p-3 rounded-xl border border-slate-200 focus:ring-2 focus:ring-emerald-500 focus:outline-none"
-                  />
-                </div>
-              </div>
-
-              <button
-                type="submit"
-                className="w-full bg-slate-900 hover:bg-slate-800 text-white text-xs font-bold py-3 rounded-xl transition shadow"
-              >
-                {authMode === 'login' ? 'Log In to MycoBiome' : 'Complete Registration'}
-              </button>
-
-              <div className="text-center pt-2">
+            ) : (
+              <div className="flex items-center gap-2">
+                <button
+                  type="button"
+                  onClick={() => setShowSyncModal(true)}
+                  className="text-slate-500 hover:text-slate-900 text-xs p-2 rounded-xl bg-slate-100/80 border border-slate-200 transition flex items-center gap-1"
+                  title="Sync or Restore Account from Desktop"
+                >
+                  <Smartphone className="h-4 w-4" /> <span className="hidden md:inline">Sync Phone</span>
+                </button>
                 <button
                   type="button"
                   onClick={() => {
-                    setAuthMode(authMode === 'login' ? 'signup' : 'login');
-                    clearAuthFields();
+                    setAuthMode('login');
+                    setShowAuthModal(true);
                   }}
-                  className="text-xs text-emerald-600 hover:underline font-semibold"
+                  className="bg-emerald-950 hover:bg-emerald-900 text-white text-xs font-bold px-3 py-2 rounded-xl transition flex items-center gap-1.5 shadow-sm"
                 >
-                  {authMode === 'login' ? "Don't have an account? Sign Up" : "Already have an account? Log In"}
+                  <User className="h-3.5 w-3.5" /> Sign In / Join
                 </button>
               </div>
-            </form>
+            )}
+
+            <button
+              type="button"
+              onClick={() => setShowSettings(!showSettings)}
+              className="p-2 rounded-xl border border-slate-200 bg-white text-slate-500 hover:text-slate-900 transition flex items-center justify-center"
+              title="API Key Configuration"
+            >
+              <Settings className="h-4 w-4" />
+            </button>
+
+            <div className="hidden md:flex items-center gap-2.5 bg-slate-950 text-white rounded-2xl p-2 px-3 border border-slate-800 shadow-md">
+              <div className="text-right">
+                <p className="text-[9px] font-bold text-slate-400 uppercase tracking-wider leading-none">Gut Well-Being</p>
+                <p className="text-xs font-bold text-slate-100 leading-none mt-1">Score Tracker</p>
+              </div>
+              <span className="text-sm font-black text-emerald-400 font-mono">
+                {scoreValue}
+              </span>
+            </div>
+
+          </div>
+        </div>
+      </header>
+
+
+      {showAuthModal && (
+        <div className="fixed inset-0 bg-slate-950/40 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-3xl p-6.5 max-w-md w-full border border-slate-100 shadow-2xl relative animate-fade-in">
+            <button
+              type="button"
+              onClick={() => {
+                setShowAuthModal(false);
+                clearAuthFields();
+              }}
+              className="absolute top-4 right-4 text-slate-400 hover:text-slate-950 p-1 rounded-xl hover:bg-slate-50 transition"
+            >
+              <X className="h-5 w-5" />
+            </button>
+
+            {authMode === 'login' && (
+              <>
+                <div className="mb-5 text-center">
+                  <div className="h-10 w-10 bg-emerald-50 text-emerald-800 rounded-2xl flex items-center justify-center mx-auto mb-3">
+                    <Database className="h-5 w-5" />
+                  </div>
+                  <h3 className="text-base font-extrabold text-slate-950">Access your Microbiome Profile</h3>
+                  <p className="text-xs text-slate-500 mt-1">
+                    Sign in to access your logs, custom timeline records, and personalized AI advisor data.
+                  </p>
+                </div>
+
+                <form onSubmit={handleLogin} className="space-y-4">
+                  <div>
+                    <label className="block text-[10px] text-slate-400 font-bold uppercase mb-1">Email Address</label>
+                    <input
+                      type="email"
+                      required
+                      placeholder="e.g., alex@guthealth.com"
+                      value={authEmail}
+                      onChange={(e) => setAuthEmail(e.target.value)}
+                      className="w-full text-xs p-3 rounded-xl border border-slate-200 focus:ring-2 focus:ring-emerald-500 focus:outline-none"
+                    />
+                  </div>
+                  <div>
+                    <div className="flex justify-between mb-1">
+                      <label className="block text-[10px] text-slate-400 font-bold uppercase">Password</label>
+                      <button 
+                        type="button" 
+                        onClick={() => setAuthMode('forgot_password')} 
+                        className="text-[10px] text-emerald-700 font-bold hover:underline"
+                      >
+                        Forgot Password?
+                      </button>
+                    </div>
+                    <input
+                      type="password"
+                      required
+                      placeholder="••••••••"
+                      value={authPassword}
+                      onChange={(e) => setAuthPassword(e.target.value)}
+                      className="w-full text-xs p-3 rounded-xl border border-slate-200 focus:ring-2 focus:ring-emerald-500 focus:outline-none"
+                    />
+                  </div>
+
+                  <button
+                    type="submit"
+                    className="w-full bg-emerald-950 hover:bg-emerald-900 text-white text-xs font-bold py-3.5 rounded-xl transition shadow mt-1.5"
+                  >
+                    Sign In to Profile
+                  </button>
+                </form>
+
+                <div className="mt-5 text-center border-t border-slate-100 pt-4">
+                  <p className="text-xs text-slate-500">
+                    Don't have an account yet?{" "}
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setAuthMode('signup');
+                        clearAuthFields();
+                      }}
+                      className="text-emerald-700 font-bold hover:underline"
+                    >
+                      Sign Up
+                    </button>
+                  </p>
+                </div>
+              </>
+            )}
+
+            {authMode === 'signup' && (
+              <>
+                <div className="mb-5 text-center">
+                  <div className="h-10 w-10 bg-emerald-50 text-emerald-800 rounded-2xl flex items-center justify-center mx-auto mb-3">
+                    <Sparkles className="h-5 w-5" />
+                  </div>
+                  <h3 className="text-base font-extrabold text-slate-950">Create Gut Account</h3>
+                  <p className="text-xs text-slate-500 mt-1">
+                    Set up a secure profile with custom security backup recovery questions.
+                  </p>
+                </div>
+
+                <form onSubmit={handleRegister} className="space-y-4">
+                  <div>
+                    <label className="block text-[10px] text-slate-400 font-bold uppercase mb-1">Your Full Name</label>
+                    <input
+                      type="text"
+                      required
+                      placeholder="e.g., Alex Johnson"
+                      value={authName}
+                      onChange={(e) => setAuthName(e.target.value)}
+                      className="w-full text-xs p-3 rounded-xl border border-slate-200 focus:ring-2 focus:ring-emerald-500 focus:outline-none"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-[10px] text-slate-400 font-bold uppercase mb-1">Email Address</label>
+                    <input
+                      type="email"
+                      required
+                      placeholder="e.g., alex@guthealth.com"
+                      value={authEmail}
+                      onChange={(e) => setAuthEmail(e.target.value)}
+                      className="w-full text-xs p-3 rounded-xl border border-slate-200 focus:ring-2 focus:ring-emerald-500 focus:outline-none"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-[10px] text-slate-400 font-bold uppercase mb-1">Password</label>
+                    <input
+                      type="password"
+                      required
+                      placeholder="••••••••"
+                      value={authPassword}
+                      onChange={(e) => setAuthPassword(e.target.value)}
+                      className="w-full text-xs p-3 rounded-xl border border-slate-200 focus:ring-2 focus:ring-emerald-500 focus:outline-none"
+                    />
+                  </div>
+                  
+                  <div className="border-t border-slate-100 pt-3 space-y-3">
+                    <p className="text-[10px] text-slate-400 font-bold uppercase flex items-center gap-1">
+                      <KeyRound className="h-3.5 w-3.5 text-emerald-800" /> Security Question (For Password Reset)
+                    </p>
+                    <div>
+                      <select
+                        value={authSecurityQuestion}
+                        onChange={(e) => setAuthSecurityQuestion(e.target.value)}
+                        className="w-full text-xs p-2.5 rounded-xl border border-slate-200 focus:ring-2 focus:ring-emerald-500 focus:outline-none bg-white"
+                      >
+                        {SECURITY_QUESTIONS.map((q, idx) => (
+                          <option key={idx} value={q}>{q}</option>
+                        ))}
+                      </select>
+                    </div>
+                    <div>
+                      <input
+                        type="text"
+                        required
+                        placeholder="Type recovery answer here..."
+                        value={authSecurityAnswer}
+                        onChange={(e) => setAuthSecurityAnswer(e.target.value)}
+                        className="w-full text-xs p-3 rounded-xl border border-slate-200 focus:ring-2 focus:ring-emerald-500 focus:outline-none"
+                      />
+                    </div>
+                  </div>
+
+                  <button
+                    type="submit"
+                    className="w-full bg-emerald-950 hover:bg-emerald-900 text-white text-xs font-bold py-3.5 rounded-xl transition shadow mt-1.5"
+                  >
+                    Register Account
+                  </button>
+                </form>
+
+                <div className="mt-5 text-center border-t border-slate-100 pt-4">
+                  <p className="text-xs text-slate-500">
+                    Already have an account?{" "}
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setAuthMode('login');
+                        clearAuthFields();
+                      }}
+                      className="text-emerald-700 font-bold hover:underline"
+                    >
+                      Log In
+                    </button>
+                  </p>
+                </div>
+              </>
+            )}
+
+            {authMode === 'forgot_password' && (
+              <>
+                <div className="mb-5 text-center">
+                  <div className="h-10 w-10 bg-emerald-50 text-emerald-800 rounded-2xl flex items-center justify-center mx-auto mb-3">
+                    <KeyRound className="h-5 w-5" />
+                  </div>
+                  <h3 className="text-base font-extrabold text-slate-950">Password Recovery</h3>
+                  <p className="text-xs text-slate-500 mt-1">
+                    Reset your password by answering the security question chosen during signup.
+                  </p>
+                </div>
+
+                {recoveryStep === 1 ? (
+                  <form onSubmit={handleInitiateRecovery} className="space-y-4">
+                    <div>
+                      <label className="block text-[10px] text-slate-400 font-bold uppercase mb-1">Enter registered email address</label>
+                      <input
+                        type="email"
+                        required
+                        placeholder="alex@guthealth.com"
+                        value={recoveryEmail}
+                        onChange={(e) => setRecoveryEmail(e.target.value)}
+                        className="w-full text-xs p-3 rounded-xl border border-slate-200 focus:ring-2 focus:ring-emerald-500 focus:outline-none"
+                      />
+                    </div>
+                    <button
+                      type="submit"
+                      className="w-full bg-emerald-950 hover:bg-emerald-900 text-white text-xs font-bold py-3.5 rounded-xl transition shadow"
+                    >
+                      Verify Email
+                    </button>
+                  </form>
+                ) : (
+                  <form onSubmit={handleCompleteRecovery} className="space-y-4">
+                    <div className="bg-slate-50 p-3 rounded-xl border border-slate-100 text-xs">
+                      <p className="text-slate-400 font-bold uppercase text-[9px] mb-1">Your Security Question:</p>
+                      <p className="font-extrabold text-slate-800">{recoveredQuestion}</p>
+                    </div>
+
+                    <div>
+                      <label className="block text-[10px] text-slate-400 font-bold uppercase mb-1">Your Answer</label>
+                      <input
+                        type="text"
+                        required
+                        placeholder="Answer answer..."
+                        value={recoveryAnswerAttempt}
+                        onChange={(e) => setRecoveryAnswerAttempt(e.target.value)}
+                        className="w-full text-xs p-3 rounded-xl border border-slate-200 focus:ring-2 focus:ring-emerald-500 focus:outline-none"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-[10px] text-slate-400 font-bold uppercase mb-1">Set New Password</label>
+                      <input
+                        type="password"
+                        required
+                        placeholder="Enter new password"
+                        value={newPassword}
+                        onChange={(e) => setNewPassword(e.target.value)}
+                        className="w-full text-xs p-3 rounded-xl border border-slate-200 focus:ring-2 focus:ring-emerald-500 focus:outline-none"
+                      />
+                    </div>
+
+                    <div className="flex gap-2 pt-1">
+                      <button
+                        type="button"
+                        onClick={() => setRecoveryStep(1)}
+                        className="flex-1 border border-slate-200 text-slate-500 text-xs font-bold py-3.5 rounded-xl hover:bg-slate-50 transition"
+                      >
+                        Back
+                      </button>
+                      <button
+                        type="submit"
+                        className="flex-1 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold py-3.5 rounded-xl transition shadow"
+                      >
+                        Reset Password
+                      </button>
+                    </div>
+                  </form>
+                )}
+
+                <div className="mt-5 text-center border-t border-slate-100 pt-4">
+                  <p className="text-xs text-slate-500">
+                    Remember your password?{" "}
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setAuthMode('login');
+                        clearAuthFields();
+                      }}
+                      className="text-emerald-700 font-bold hover:underline"
+                    >
+                      Sign In
+                    </button>
+                  </p>
+                </div>
+              </>
+            )}
+
           </div>
         </div>
       )}
 
-      {/* API Configuration Modal */}
-      {isSettingsOpen && (
-        <div className="fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-          <div className="bg-white rounded-3xl p-6 max-w-md w-full border border-slate-100 shadow-2xl space-y-4 animate-in fade-in zoom-in-95 duration-200">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2 text-slate-900">
-                <Settings className="h-5 w-5 text-emerald-600" />
-                <h3 className="font-extrabold text-base">Gemini API Key Settings</h3>
-              </div>
-              <button 
-                onClick={() => setIsSettingsOpen(false)}
-                className="text-slate-400 hover:text-slate-600 text-sm font-semibold p-1"
-              >
-                ✕
-              </button>
+      {showSyncModal && (
+        <div className="fixed inset-0 bg-slate-950/40 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-3xl p-6.5 max-w-lg w-full border border-slate-100 shadow-2xl relative max-h-[90vh] overflow-y-auto animate-fade-in">
+            <button
+              type="button"
+              onClick={() => {
+                setShowSyncModal(false);
+                setSyncPinCode('');
+                setSyncCodeToRetrieve('');
+                setManualBackupString('');
+                setManualImportString('');
+              }}
+              className="absolute top-4 right-4 text-slate-400 hover:text-slate-950 p-1 rounded-xl hover:bg-slate-50 transition"
+            >
+              <X className="h-5 w-5" />
+            </button>
+
+            <div className="mb-6">
+              <h3 className="text-base font-extrabold text-slate-950 flex items-center gap-1.5">
+                <Smartphone className="h-5.5 w-5.5 text-emerald-800" /> Device Sync & Mobile Pairing
+              </h3>
+              <p className="text-xs text-slate-500 mt-1">
+                Because your accounts are saved inside your device's browser local storage, use this Cloud Sync Bridge to safely copy and sync your profiles over to your phone!
+              </p>
             </div>
 
-            <p className="text-xs text-slate-500 leading-relaxed">
-              We process everything locally inside your browser directly with Google's API. Your key is stored securely in your browser's local cache and is never uploaded to external intermediary servers.
-            </p>
+            <div className="space-y-6">
+              
+              <div className="p-4 bg-slate-50 rounded-2xl border border-slate-100 space-y-4">
+                <div>
+                  <h4 className="text-xs font-black text-slate-900 uppercase tracking-wide flex items-center gap-1.5">
+                    <Check className="h-4 w-4 text-emerald-700" /> 1. Send data from Desktop (Source)
+                  </h4>
+                  <p className="text-[10.5px] text-slate-500 leading-normal mt-0.5">
+                    Click below to secure and upload your database payload. You will receive a 6-character PIN code.
+                  </p>
+                </div>
 
-            <form onSubmit={saveApiKey} className="space-y-3">
-              <div>
-                <label className="block text-[10px] text-slate-400 font-black uppercase tracking-wider mb-1">Google AI Studio API Key</label>
-                <input 
-                  type="password" 
-                  placeholder="AIzaSy..." 
-                  value={apiKeyInput}
-                  onChange={(e) => setApiKeyInput(e.target.value)}
-                  className="w-full text-sm font-mono p-3 rounded-xl border border-slate-200 focus:ring-2 focus:ring-emerald-500 focus:outline-none"
-                />
+                <button
+                  type="button"
+                  disabled={isSyncing}
+                  onClick={handleGenerateCloudSync}
+                  className="bg-emerald-950 hover:bg-emerald-900 text-white text-xs font-bold py-2 px-4 rounded-xl transition flex items-center justify-center gap-1.5 shadow"
+                >
+                  {isSyncing ? "Creating Cloud Tunnel..." : "Upload & Generate Sync PIN"}
+                </button>
+
+                {syncPinCode && (
+                  <div className="bg-white p-3.5 rounded-xl border border-emerald-100 flex items-center justify-between gap-3">
+                    <div>
+                      <span className="text-[9px] font-bold text-emerald-800 uppercase block tracking-wider">Your Pairing PIN:</span>
+                      <span className="text-xl font-mono font-black text-slate-950 tracking-widest">{syncPinCode}</span>
+                    </div>
+                    <div className="text-right max-w-[200px]">
+                      <p className="text-[10px] text-slate-500 leading-normal">
+                        Type this 6-character PIN code on your phone browser/app to pair! (Expires in 3 months).
+                      </p>
+                    </div>
+                  </div>
+                )}
+
+                {manualBackupString && (
+                  <div className="space-y-1.5 pt-1.5 border-t border-slate-200">
+                    <label className="block text-[9px] font-bold text-slate-400 uppercase">Or Copy Backup Code manually:</label>
+                    <div className="flex gap-2">
+                      <input
+                        type="text"
+                        readOnly
+                        value={manualBackupString}
+                        className="flex-1 text-[9px] p-2 rounded-lg border border-slate-200 bg-white select-all font-mono"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => {
+                          navigator.clipboard.writeText(manualBackupString);
+                          showNotification("Backup code copied to clipboard!");
+                        }}
+                        className="bg-white hover:bg-slate-50 border border-slate-200 p-2 rounded-lg transition"
+                        title="Copy to clipboard"
+                      >
+                        <Copy className="h-3.5 w-3.5 text-slate-500" />
+                      </button>
+                    </div>
+                  </div>
+                )}
               </div>
 
-              <div className="flex items-center justify-between text-[11px] bg-slate-50 p-3 rounded-xl">
-                <span className="text-slate-500 font-semibold">Don't have an API key?</span>
-                <a 
-                  href="https://aistudio.google.com/" 
-                  target="_blank" 
-                  rel="noreferrer" 
-                  className="text-emerald-600 hover:underline font-bold"
-                >
-                  Get a Free Key →
-                </a>
+              <div className="p-4 bg-slate-50 rounded-2xl border border-slate-100 space-y-4">
+                <div>
+                  <h4 className="text-xs font-black text-slate-900 uppercase tracking-wide flex items-center gap-1.5">
+                    <RefreshCw className="h-4 w-4 text-emerald-700" /> 2. Receive data on Phone (Target)
+                  </h4>
+                  <p className="text-[10.5px] text-slate-500 leading-normal mt-0.5">
+                    Type in the 6-character PIN code generated on your desktop screen below to sync your database.
+                  </p>
+                </div>
+
+                <div className="flex gap-2 max-w-sm">
+                  <input
+                    type="text"
+                    maxLength="6"
+                    placeholder="e.g., G8X3P1"
+                    value={syncCodeToRetrieve}
+                    onChange={(e) => setSyncCodeToRetrieve(e.target.value)}
+                    className="flex-1 text-xs p-3 rounded-xl border border-slate-200 bg-white focus:ring-2 focus:ring-emerald-500 focus:outline-none font-mono uppercase tracking-widest text-center"
+                  />
+                  <button
+                    type="button"
+                    disabled={isSyncing}
+                    onClick={handleRetrieveCloudSync}
+                    className="bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold px-4 rounded-xl transition"
+                  >
+                    {isSyncing ? "Pulling..." : "Sync Devices"}
+                  </button>
+                </div>
+
+                <div className="space-y-1.5 pt-3 border-t border-slate-200">
+                  <label className="block text-[9px] font-bold text-slate-400 uppercase">Or paste manual backup code:</label>
+                  <div className="flex gap-2">
+                    <input
+                      type="text"
+                      placeholder="Paste backup code here..."
+                      value={manualImportString}
+                      onChange={(e) => setManualImportString(e.target.value)}
+                      className="flex-1 text-[10px] p-2.5 rounded-xl border border-slate-200 bg-white font-mono"
+                    />
+                    <button
+                      type="button"
+                      onClick={handleManualImport}
+                      className="bg-emerald-950 hover:bg-emerald-900 text-white text-xs font-bold px-4 rounded-xl transition"
+                    >
+                      Import
+                    </button>
+                  </div>
+                </div>
+              </div>
+
+            </div>
+
+            <div className="mt-5 pt-3 border-t border-slate-100 text-[10px] text-slate-400 leading-relaxed text-center">
+              🔒 <strong>Privacy Guard:</strong> Your logs, credentials, and symptoms are compressed fully client-side before sending and are safely stored in temporary vaults.
+            </div>
+
+          </div>
+        </div>
+      )}
+
+      {showSettings && (
+        <div className="fixed inset-0 bg-slate-950/40 backdrop-blur-sm flex items-center justify-center z-50 p-4 animate-fade-in">
+          <div className="bg-white rounded-3xl p-6.5 max-w-md w-full border border-slate-100 shadow-2xl relative">
+            <button
+              type="button"
+              onClick={() => setShowSettings(false)}
+              className="absolute top-4 right-4 text-slate-400 hover:text-slate-950 p-1 rounded-xl hover:bg-slate-50 transition"
+            >
+              <X className="h-5 w-5" />
+            </button>
+
+            <div className="mb-5">
+              <h3 className="text-base font-extrabold text-slate-950 flex items-center gap-1.5">
+                <Settings className="h-5 w-5 text-emerald-800" /> Gemini API Config
+              </h3>
+              <p className="text-xs text-slate-500 mt-1.5">
+                The food parsing and biological gut advisory features are driven by Google Gemini's advanced models. Provide your own key below to query safely.
+              </p>
+            </div>
+
+            <form onSubmit={saveApiKey} className="space-y-4">
+              <div>
+                <label className="block text-[10px] font-bold uppercase text-slate-400 mb-1.5">Personal Google Gemini API Key</label>
+                <input
+                  type="password"
+                  value={customApiKey}
+                  onChange={(e) => setCustomApiKey(e.target.value)}
+                  placeholder="AIzaSy..."
+                  className="w-full text-xs p-3 rounded-xl border border-slate-200 focus:ring-2 focus:ring-emerald-500 focus:outline-none font-mono"
+                />
+                <p className="text-[10px] text-slate-400 leading-relaxed mt-2">
+                  🔑 Your keys are stored completely inside your own web browser storage (localStorage) and never touch outside analytical log servers. You can acquire a free token inside <a href="https://aistudio.google.com/" target="_blank" rel="noopener noreferrer" className="text-emerald-700 font-semibold underline">Google AI Studio</a>.
+                </p>
               </div>
 
               <div className="flex gap-2.5 pt-2">
                 <button
                   type="button"
-                  onClick={() => setIsSettingsOpen(false)}
-                  className="flex-1 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold py-2.5 rounded-xl transition"
+                  onClick={() => setShowSettings(false)}
+                  className="flex-1 border border-slate-200 text-slate-500 text-xs font-bold py-3 rounded-xl hover:bg-slate-50 transition"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
-                  className="flex-1 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold py-2.5 rounded-xl transition shadow"
+                  className="flex-1 bg-emerald-950 hover:bg-emerald-900 text-white text-xs font-bold py-3 rounded-xl transition shadow"
                 >
-                  Save API Key
+                  Save API Config
                 </button>
               </div>
             </form>
@@ -920,412 +1416,223 @@ export default function App() {
         </div>
       )}
 
-      {/* HEADER SECTION */}
-      <header className="sticky top-0 bg-white/90 backdrop-blur-md border-b border-slate-100 z-40 transition-all">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex items-center justify-between h-16">
-          <div className="flex items-center gap-3">
-            <div className="p-2 bg-emerald-50 text-emerald-600 rounded-xl shadow-inner">
-              <Activity className="h-6 w-6 stroke-[2.5]" />
-            </div>
-            <div>
-              <h1 className="text-lg font-bold text-slate-900 tracking-tight flex items-center gap-1.5">
-                MycoBiome <span className="text-xs bg-emerald-100 text-emerald-800 px-2 py-0.5 rounded-full font-bold uppercase tracking-wider">AI</span>
-              </h1>
-              <p className="text-xs text-slate-500 font-medium">Precision Gut Health & Microbe Tracker</p>
-            </div>
-          </div>
 
-          <nav className="hidden md:flex space-x-1">
-            {['dashboard', 'meals', 'symptoms', 'advisor', 'encyclopedia'].map((tab) => (
-              <button
-                key={tab}
-                onClick={() => setActiveTab(tab)}
-                className={`px-4 py-2 text-sm font-semibold rounded-xl transition-all capitalize ${
-                  activeTab === tab 
-                    ? 'bg-slate-950 text-white shadow-md shadow-slate-900/15' 
-                    : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900'
-                }`}
-              >
-                {tab === 'advisor' ? 'AI Gut Advisor' : tab}
-              </button>
-            ))}
-          </nav>
-
-          <div className="flex items-center gap-2">
-            {/* User Profile Login / Status Trigger */}
-            {currentUser ? (
-              <div className="flex items-center gap-2">
-                <span className="hidden sm:inline-block text-xs font-bold text-slate-700 bg-slate-100 px-2.5 py-1.5 rounded-xl">
-                  👤 {currentUser.name}
-                </span>
-                <button
-                  onClick={handleLogout}
-                  className="p-2 bg-red-50 hover:bg-red-100 text-red-600 rounded-xl transition"
-                  title="Log Out"
-                >
-                  <LogOut className="h-4 w-4" />
-                </button>
-              </div>
-            ) : (
-              <button
-                onClick={() => { setAuthMode('login'); setShowAuthModal(true); }}
-                className="inline-flex items-center gap-1.5 text-xs font-bold text-slate-700 bg-slate-100 hover:bg-slate-200 px-3 py-1.5 rounded-xl transition"
-              >
-                <User className="h-4 w-4" /> Sign In
-              </button>
-            )}
-
-            <div className="flex items-center gap-1.5 bg-emerald-50 text-emerald-800 px-3 py-1.5 rounded-xl border border-emerald-100">
-              <Heart className="h-4 w-4 fill-emerald-500 text-emerald-500 animate-pulse" />
-              <span className="text-xs font-bold font-mono">Score: {microbiomeScore}%</span>
-            </div>
+      <nav className="bg-white border-b border-slate-100 sticky top-18 z-30 shadow-sm/50">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex justify-start space-x-1 py-2 overflow-x-auto scrollbar-none">
+            
             <button
-              onClick={() => setIsSettingsOpen(true)}
-              className="p-2 bg-slate-50 hover:bg-slate-100 text-slate-600 hover:text-slate-900 rounded-xl border border-slate-200 transition"
-              title="API Key Configuration"
+              onClick={() => setActiveTab("dashboard")}
+              className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-extrabold transition-all duration-200 flex-shrink-0 ${
+                activeTab === "dashboard" 
+                  ? "bg-slate-900 text-white shadow-sm" 
+                  : "text-slate-500 hover:bg-slate-50 hover:text-slate-900"
+              }`}
             >
-              <Settings className="h-4 w-4" />
+              <Activity className="h-4 w-4" /> Gut Dashboard
             </button>
+
+            <button
+              onClick={() => setActiveTab("food")}
+              className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-extrabold transition-all duration-200 flex-shrink-0 ${
+                activeTab === "food" 
+                  ? "bg-slate-900 text-white shadow-sm" 
+                  : "text-slate-500 hover:bg-slate-50 hover:text-slate-900"
+              }`}
+            >
+              <Plus className="h-4 w-4" /> Molecular Food Log
+            </button>
+
+            <button
+              onClick={() => setActiveTab("symptoms")}
+              className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-extrabold transition-all duration-200 flex-shrink-0 ${
+                activeTab === "symptoms" 
+                  ? "bg-slate-900 text-white shadow-sm" 
+                  : "text-slate-500 hover:bg-slate-50 hover:text-slate-900"
+              }`}
+            >
+              <Layers className="h-4 w-4" /> Physical Symptoms
+            </button>
+
+            <button
+              onClick={() => setActiveTab("education")}
+              className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-extrabold transition-all duration-200 flex-shrink-0 ${
+                activeTab === "education" 
+                  ? "bg-slate-900 text-white shadow-sm" 
+                  : "text-slate-500 hover:bg-slate-50 hover:text-slate-900"
+              }`}
+            >
+              <BookOpen className="h-4 w-4" /> Gut Encyclopedia
+            </button>
+
           </div>
         </div>
-      </header>
+      </nav>
 
-      {/* Mobile Navigation Header */}
-      <div className="md:hidden flex overflow-x-auto gap-1 bg-white border-b border-slate-100 px-2 py-2 sticky top-16 z-30 shadow-sm scrollbar-none">
-        {['dashboard', 'meals', 'symptoms', 'advisor', 'encyclopedia'].map((tab) => (
-          <button
-            key={tab}
-            onClick={() => setActiveTab(tab)}
-            className={`flex-shrink-0 px-3 py-1.5 text-xs font-bold rounded-lg capitalize ${
-              activeTab === tab ? 'bg-slate-950 text-white' : 'text-slate-600 hover:bg-slate-50'
-            }`}
-          >
-            {tab === 'advisor' ? 'AI Gut Advisor' : tab}
-          </button>
-        ))}
-      </div>
-
-      {/* MAIN VIEW CONTENT */}
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         
-        {/* TAB 1: DASHBOARD VIEW */}
-        {activeTab === 'dashboard' && (
+        {activeTab === "dashboard" && (
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
             
-            {/* Left Column: Well-being Score & Animated Microbe Ecosystem */}
-            <div className="lg:col-span-2 space-y-8">
+            <div className="lg:col-span-2 space-y-6">
               
-              {/* Score Display Card */}
-              <div className="bg-gradient-to-br from-emerald-950 to-slate-900 text-white rounded-3xl p-6 sm:p-8 relative overflow-hidden shadow-xl shadow-emerald-950/20">
-                <div className="absolute right-0 bottom-0 opacity-10 pointer-events-none translate-x-12 translate-y-12">
-                  <Activity className="h-64 w-64 text-emerald-400" />
+              <div className="bg-white rounded-3xl p-6 border border-slate-100 shadow-sm relative overflow-hidden flex flex-col justify-between min-h-120">
+                <div className="z-10 bg-white/70 backdrop-blur-sm p-4 rounded-2xl border border-slate-100 max-w-sm">
+                  <h2 className="text-sm font-black text-slate-950 uppercase tracking-wider flex items-center gap-1.5">
+                    <Smile className="h-5.5 w-5.5 text-emerald-700" /> Gut Flora Live Microbe Simulation
+                  </h2>
+                  <p className="text-[11px] text-slate-400 mt-1 leading-relaxed font-semibold">
+                    Interactive canvas visualizing how physical symptoms, logged meals, prebiotic fiber, stress triggers, and water dynamic populations actively live in your molecular gut.
+                  </p>
                 </div>
-                
-                <div className="relative z-10 flex flex-col md:flex-row items-center justify-between gap-6">
-                  <div className="space-y-4 text-center md:text-left">
-                    <span className="inline-flex items-center gap-1.5 bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 px-3 py-1 rounded-full text-xs font-semibold uppercase tracking-wider">
-                      <Sparkles className="h-3.5 w-3.5" /> Predicted Microbiome Well-being
-                    </span>
-                    <h2 className="text-3xl sm:text-4xl font-extrabold tracking-tight">
-                      Your gut is in {microbiomeScore >= 80 ? 'Symbiotic Bliss' : microbiomeScore >= 50 ? 'Steady Balance' : 'Dysbiosis Risk'}
-                    </h2>
-                    <p className="text-emerald-200/80 text-sm max-w-md">
-                      Based on your physical feedback, fiber levels, prebiotic flora-feed, and hydration rates today.
-                    </p>
-                    <button
-                      onClick={() => setActiveTab('advisor')}
-                      className="mt-2 inline-flex items-center gap-2 bg-white text-slate-900 hover:bg-emerald-50 font-bold px-4 py-2.5 rounded-xl text-xs transition shadow-lg transition-transform hover:scale-[1.02]"
-                    >
-                      <Sparkles className="h-4 w-4 text-emerald-600 fill-emerald-100" /> Consult AI Microbiome Advisor
-                    </button>
-                  </div>
 
-                  <div className="flex-shrink-0 flex flex-col items-center justify-center p-6 bg-white/10 rounded-2xl border border-white/10 backdrop-blur-sm">
-                    <div className="relative flex items-center justify-center">
-                      <svg className="w-32 h-32 transform -rotate-90">
-                        <circle cx="64" cy="64" r="54" className="stroke-white/10 fill-none" strokeWidth="8" />
-                        <circle 
-                          cx="64" cy="64" r="54" 
-                          className="stroke-emerald-400 transition-all duration-1000 ease-out fill-none" 
-                          strokeWidth="8" 
-                          strokeDasharray={339.3}
-                          strokeDashoffset={339.3 - (339.3 * microbiomeScore) / 100}
-                          strokeLinecap="round"
-                        />
-                      </svg>
-                      <span className="absolute text-4xl font-black font-mono tracking-tighter text-white">{microbiomeScore}%</span>
+                <div className="absolute inset-0 z-0">
+                  <canvas ref={canvasRef} className="w-full h-full block bg-slate-950/2" />
+                </div>
+
+                <div className="z-10 grid grid-cols-2 sm:grid-cols-4 gap-2.5 mt-auto">
+                  {MICROBES_INFO.map((microbe) => (
+                    <div key={microbe.name} className="p-2.5 rounded-2xl bg-white/90 border border-slate-100 backdrop-blur-md shadow-sm">
+                      <div className="flex items-center gap-1.5">
+                        <span className="w-2.5 h-2.5 rounded-full flex-shrink-0" style={{ backgroundColor: microbe.color }} />
+                        <h4 className="text-[10px] font-black text-slate-900 tracking-wider uppercase">{microbe.name}</h4>
+                      </div>
+                      <p className="text-[8px] text-slate-500 leading-normal mt-1">{microbe.desc}</p>
                     </div>
-                    <span className="text-[10px] text-emerald-300 font-bold uppercase tracking-widest mt-2">Gut Bio Score</span>
-                  </div>
+                  ))}
                 </div>
               </div>
 
-              {/* Ecosystem Interactive Simulator */}
-              <div className="bg-white rounded-3xl p-6 border border-slate-100 shadow-sm">
-                <div className="flex items-center justify-between mb-4">
-                  <div>
-                    <h3 className="text-lg font-bold text-slate-900 flex items-center gap-2">
-                      <Activity className="h-5 w-5 text-emerald-600" /> Interactive Gut Flora Simulator
-                    </h3>
-                    <p className="text-xs text-slate-500">Visualizing estimated microbial abundance reacting to your logged items</p>
-                  </div>
-                  <span className="text-xs bg-slate-100 text-slate-700 px-2.5 py-1 rounded-lg font-semibold">
-                    Interactive Microscope view
-                  </span>
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-4.5">
+                <div className="bg-white p-5 rounded-2xl border border-slate-100 shadow-sm text-center">
+                  <h4 className="text-[9px] font-bold text-slate-400 uppercase tracking-widest leading-none">Dietary Fiber</h4>
+                  <p className="text-xl font-black text-slate-950 font-mono mt-2.5">
+                    {foodLogs.reduce((acc, log) => acc + log.fiber, 0)}g
+                  </p>
+                  <p className="text-[9px] text-slate-500 font-semibold mt-1">Goal: 30g+ daily</p>
                 </div>
 
-                {/* Animated Simulation Box */}
-                <div className="relative bg-slate-900 rounded-2xl h-80 overflow-hidden shadow-inner flex items-center justify-center border-4 border-slate-950">
-                  <div className="absolute inset-0 opacity-20 pointer-events-none bg-[radial-gradient(#1e293b_1px,transparent_1px)] [background-size:16px_16px]"></div>
-                  <div className="absolute inset-0 pointer-events-none bg-[radial-gradient(circle_at_center,transparent_45%,rgba(15,23,42,0.85))]"></div>
-
-                  {/* Render simulated floating microbe blobs */}
-                  <div className="absolute inset-0 overflow-hidden">
-                    {/* Render Bifido Strains (Blue rods) */}
-                    {[...Array(microbes.bifido.population)].map((_, i) => (
-                      <div
-                        key={`bif-${i}`}
-                        className="absolute rounded-full flex items-center justify-center text-[8px]"
-                        style={{
-                          left: `${(i * 19.3 + 12) % 90}%`,
-                          top: `${(i * 11.7 + 25) % 80}%`,
-                          width: '18px',
-                          height: '8px',
-                          background: microbes.bifido.color,
-                          boxShadow: `0 0 10px ${microbes.bifido.color}80`,
-                          opacity: 0.85,
-                          transform: `rotate(${i * 45}deg)`,
-                          animation: `bounce ${2.5 + (i % 3)}s infinite ease-in-out`
-                        }}
-                      />
-                    ))}
-
-                    {/* Render Lacto Strains (Pink spheres) */}
-                    {[...Array(microbes.lacto.population)].map((_, i) => (
-                      <div
-                        key={`lac-${i}`}
-                        className="absolute rounded-full"
-                        style={{
-                          left: `${(i * 23.4 + 7) % 90}%`,
-                          top: `${(i * 15.2 + 10) % 80}%`,
-                          width: '12px',
-                          height: '12px',
-                          background: microbes.lacto.color,
-                          boxShadow: `0 0 8px ${microbes.lacto.color}90`,
-                          opacity: 0.8,
-                          animation: `pulse ${1.8 + (i % 4)}s infinite ease-in-out`
-                        }}
-                      />
-                    ))}
-
-                    {/* Render Akkermansia protectors (Green sturdy ovals) */}
-                    {[...Array(microbes.akkermansia.population)].map((_, i) => (
-                      <div
-                        key={`akk-${i}`}
-                        className="absolute rounded-lg border border-white/20"
-                        style={{
-                          left: `${(i * 29.1 + 18) % 90}%`,
-                          top: `${(i * 13.9 + 40) % 85}%`,
-                          width: '14px',
-                          height: '14px',
-                          background: microbes.akkermansia.color,
-                          boxShadow: `0 0 12px ${microbes.akkermansia.color}a0`,
-                          opacity: 0.9,
-                          transform: `rotate(${i * 15}deg)`,
-                          animation: `bounce ${3 + (i % 2)}s infinite ease-in-out`
-                        }}
-                      />
-                    ))}
-
-                    {/* Render Sugar-Lovers/Opportunistic (Orange circles) */}
-                    {[...Array(microbes.opportunistic.population)].map((_, i) => (
-                      <div
-                        key={`opp-${i}`}
-                        className="absolute rounded-full border border-orange-300/30"
-                        style={{
-                          left: `${(i * 17.5 + 45) % 90}%`,
-                          top: `${(i * 21.3 + 5) % 80}%`,
-                          width: '10px',
-                          height: '10px',
-                          background: microbes.opportunistic.color,
-                          boxShadow: `0 0 6px ${microbes.opportunistic.color}70`,
-                          opacity: microbes.opportunistic.mood === 'aggressive' ? 0.9 : 0.4,
-                          animation: `pulse ${1.2 + (i % 3)}s infinite ease-in-out`
-                        }}
-                      />
-                    ))}
-                  </div>
-
-                  {/* Microbe Live Feed Legend Indicator overlay */}
-                  <div className="absolute bottom-3 left-3 right-3 bg-slate-950/80 backdrop-blur-md px-3 py-2 rounded-xl border border-white/10 flex flex-wrap gap-x-4 gap-y-1 text-[11px] justify-between">
-                    <div className="flex items-center gap-1.5">
-                      <div className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: microbes.bifido.color }}></div>
-                      <span className="text-slate-300">Bifidobacteria: <span className="text-white font-bold">{microbes.bifido.population}x ({microbes.bifido.mood})</span></span>
-                    </div>
-                    <div className="flex items-center gap-1.5">
-                      <div className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: microbes.lacto.color }}></div>
-                      <span className="text-slate-300">Lactobacillus: <span className="text-white font-bold">{microbes.lacto.population}x ({microbes.lacto.mood})</span></span>
-                    </div>
-                    <div className="flex items-center gap-1.5">
-                      <div className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: microbes.akkermansia.color }}></div>
-                      <span className="text-slate-300">Akkermansia: <span className="text-white font-bold">{microbes.akkermansia.population}x ({microbes.akkermansia.mood})</span></span>
-                    </div>
-                    <div className="flex items-center gap-1.5">
-                      <div className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: microbes.opportunistic.color }}></div>
-                      <span className="text-slate-300">Sugar-feeders: <span className="text-white font-bold">{microbes.opportunistic.population}x ({microbes.opportunistic.mood})</span></span>
-                    </div>
-                  </div>
+                <div className="bg-white p-5 rounded-2xl border border-slate-100 shadow-sm text-center">
+                  <h4 className="text-[9px] font-bold text-slate-400 uppercase tracking-widest leading-none">Bristol Stool</h4>
+                  <p className="text-xl font-black text-slate-950 font-mono mt-2.5">
+                    Type {stoolType}
+                  </p>
+                  <p className="text-[9px] text-slate-500 font-semibold mt-1 uppercase">
+                    {stoolType === 4 || stoolType === 3 ? "Excellent" : "Constipation/Diarrhea"}
+                  </p>
                 </div>
 
-                {/* Analysis Commentary box */}
-                <div className="mt-4 p-4 bg-emerald-50 rounded-xl border border-emerald-100/50 text-xs text-emerald-800 leading-relaxed flex items-start gap-2.5">
-                  <Info className="h-4 w-4 text-emerald-600 mt-0.5 flex-shrink-0" />
-                  <div>
-                    <span className="font-bold">Ecosystem Snapshot:</span>{' '}
-                    {microbiomeScore >= 80 ? (
-                      <span>Superb! High dietary fiber and prebiotics are feeding key short-chain fatty acid (SCFA) synthesizers like Bifidobacteria and Akkermansia. This stabilizes the protective mucosal lining and promotes anti-inflammatory pathways. Keep up the high prebiotic food choices!</span>
-                    ) : microbiomeScore >= 50 ? (
-                      <span>Stable gut state. Your dietary logs indicate some plant diversity, but increasing prebiotic-rich foods (onions, leeks, garlic, green bananas) will trigger higher growth for gut-barrier guardians like *Akkermansia muciniphila*. Keep drinking water to improve transit times.</span>
-                    ) : (
-                      <span>High risk of gut dysbiosis. A lack of structural fiber and fermented elements is starving key symbionts. The opportunistic/inflammatory species are currently enjoying available refined carbs. Add dynamic fibers, probiotics, and improve hydration levels to repair.</span>
-                    )}
-                  </div>
+                <div className="bg-white p-5 rounded-2xl border border-slate-100 shadow-sm text-center">
+                  <h4 className="text-[9px] font-bold text-slate-400 uppercase tracking-widest leading-none">Stress Impact</h4>
+                  <p className="text-xl font-black text-slate-950 font-mono mt-2.5">
+                    {stressLevel}/5
+                  </p>
+                  <p className="text-[9px] text-slate-500 font-semibold mt-1 uppercase">
+                    {stressLevel >= 4 ? "Cortisol Active" : "Parasympathetic"}
+                  </p>
+                </div>
+
+                <div className="bg-white p-5 rounded-2xl border border-slate-100 shadow-sm text-center">
+                  <h4 className="text-[9px] font-bold text-slate-400 uppercase tracking-widest leading-none">Hydration Levels</h4>
+                  <p className="text-xl font-black text-slate-950 font-mono mt-2.5">
+                    {waterIntake}L
+                  </p>
+                  <p className="text-[9px] text-slate-500 font-semibold mt-1">Goal: 3L+ daily</p>
                 </div>
               </div>
 
             </div>
 
-            {/* Right Column: Key Daily Stats Ring & Hydration */}
-            <div className="space-y-8">
+            <div className="space-y-6">
               
-              {/* Daily Target Progress Bars */}
-              <div className="bg-white rounded-3xl p-6 border border-slate-100 shadow-sm space-y-6">
+              <div className="bg-slate-950 text-white rounded-3xl p-6 border border-slate-800 shadow-xl space-y-6">
                 <div>
-                  <h3 className="text-sm font-extrabold text-slate-950 uppercase tracking-wider flex items-center gap-2">
-                    <TrendingUp className="h-4 w-4 text-slate-500" /> Daily Nutritional Targets
+                  <h3 className="text-sm font-black text-slate-100 uppercase tracking-wider flex items-center gap-1.5">
+                    <Sparkles className="h-5 w-5 text-emerald-400" /> Deep AI Advisor Synthesis
                   </h3>
-                  <p className="text-xs text-slate-500">How your meal intake stacked up today</p>
+                  <p className="text-xs text-slate-400 leading-relaxed mt-1.5">
+                    Click below to trigger our Gemini molecular specialist engine, analyzing physical symptoms, stools, prebiotics, and vagus impacts.
+                  </p>
                 </div>
 
-                <div className="space-y-4">
-                  {/* Dietary Fiber Progress bar */}
-                  <div>
-                    <div className="flex justify-between text-xs font-semibold mb-1">
-                      <span className="text-slate-700 flex items-center gap-1.5">
-                        <Apple className="h-3.5 w-3.5 text-emerald-600" /> Gut Fiber
-                      </span>
-                      <span className="text-slate-900 font-mono font-bold">{dailyTotals.fiber}g / {targets.fiber}g</span>
-                    </div>
-                    <div className="w-full bg-slate-100 h-2 rounded-full overflow-hidden">
-                      <div 
-                        className={`h-full rounded-full transition-all duration-500 ${dailyTotals.fiber >= targets.fiber ? 'bg-emerald-500' : 'bg-emerald-600'}`}
-                        style={{ width: `${Math.min((dailyTotals.fiber / targets.fiber) * 100, 100)}%` }}
-                      />
-                    </div>
-                    {dailyTotals.fiber < targets.fiber ? (
-                      <p className="text-[10px] text-amber-600 font-semibold mt-1">Need {targets.fiber - dailyTotals.fiber}g more fiber to feed beneficial strains.</p>
-                    ) : (
-                      <p className="text-[10px] text-emerald-600 font-semibold mt-1">Awesome! Target met to produce healthy SCFAs like butyrate!</p>
-                    )}
-                  </div>
+                <button
+                  type="button"
+                  onClick={handleGenerateAdvisorReport}
+                  disabled={isAnalyzing}
+                  className="w-full bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold py-3 px-4 rounded-xl transition flex items-center justify-center gap-1.5 shadow"
+                >
+                  {isAnalyzing ? "Synthesizing Core Data..." : "Run Molecular Synthesis Report"}
+                </button>
 
-                  {/* Prebiotics Progress bar */}
-                  <div>
-                    <div className="flex justify-between text-xs font-semibold mb-1">
-                      <span className="text-slate-700 flex items-center gap-1.5">
-                        <Sparkles className="h-3.5 w-3.5 text-blue-500" /> Prebiotic Fuel
-                      </span>
-                      <span className="text-slate-900 font-mono font-bold">{dailyTotals.prebiotics}g / {targets.prebiotics}g</span>
-                    </div>
-                    <div className="w-full bg-slate-100 h-2 rounded-full overflow-hidden">
-                      <div 
-                        className="h-full bg-blue-600 rounded-full transition-all duration-500"
-                        style={{ width: `${Math.min((dailyTotals.prebiotics / targets.prebiotics) * 100, 100)}%` }}
-                      />
-                    </div>
-                  </div>
-
-                  {/* Probiotic Fermented Elements Counter */}
-                  <div className="grid grid-cols-2 gap-3 pt-2">
-                    <div className="p-3 bg-emerald-50/60 rounded-xl border border-emerald-100/50 text-center">
-                      <span className="text-[10px] text-slate-500 font-bold block uppercase">Fermented Foods</span>
-                      <span className="text-xl font-black font-mono text-emerald-800">{dailyTotals.fermentedCount}</span>
-                    </div>
-                    <div className="p-3 bg-blue-50/60 rounded-xl border border-blue-100/50 text-center">
-                      <span className="text-[10px] text-slate-500 font-bold block uppercase">Live Probiotics</span>
-                      <span className="text-xl font-black font-mono text-blue-800">{dailyTotals.probioticsCount}</span>
-                    </div>
-                  </div>
-
-                  {/* Macros Breakdown Pills */}
-                  <div className="border-t border-slate-100 pt-4 space-y-2">
-                    <span className="text-[10px] text-slate-400 uppercase font-extrabold tracking-widest block">Standard Macronutrients</span>
-                    <div className="grid grid-cols-3 gap-2">
-                      <div className="bg-slate-50 p-2.5 rounded-lg text-center">
-                        <span className="text-[9px] text-slate-500 font-bold block">Carbs</span>
-                        <span className="text-xs font-bold text-slate-900">{dailyTotals.carbs}g</span>
-                      </div>
-                      <div className="bg-slate-50 p-2.5 rounded-lg text-center">
-                        <span className="text-[9px] text-slate-500 font-bold block">Protein</span>
-                        <span className="text-xs font-bold text-slate-900">{dailyTotals.protein}g</span>
-                      </div>
-                      <div className="bg-slate-50 p-2.5 rounded-lg text-center">
-                        <span className="text-[9px] text-slate-500 font-bold block">Fats</span>
-                        <span className="text-xs font-bold text-slate-900">{dailyTotals.fats}g</span>
-                      </div>
-                    </div>
-                  </div>
-
-                </div>
-              </div>
-
-              {/* Dynamic Daily Water Tracker Widget */}
-              <div className="bg-white rounded-3xl p-6 border border-slate-100 shadow-sm">
-                <div className="flex items-center justify-between mb-4">
-                  <div>
-                    <h3 className="text-sm font-extrabold text-slate-950 uppercase tracking-wider flex items-center gap-1.5">
-                      <Droplet className="h-4 w-4 text-blue-500" /> Hydration Motility
-                    </h3>
-                    <p className="text-xs text-slate-500">Water supports bowel movement</p>
-                  </div>
-                  <span className="text-xs font-bold font-mono text-blue-600">{waterIntake * 250}ml</span>
-                </div>
-
-                <div className="flex justify-between items-center gap-2">
-                  <div className="flex gap-1.5">
-                    {[...Array(targets.water)].map((_, idx) => (
-                      <button 
-                        key={idx}
-                        onClick={() => setWaterIntake(idx + 1)}
-                        className={`w-7 h-10 rounded-lg flex flex-col justify-end items-center overflow-hidden transition-all duration-300 border ${
-                          idx < waterIntake 
-                            ? 'bg-blue-100 border-blue-300 shadow-sm' 
-                            : 'bg-slate-50 border-slate-200 hover:bg-slate-100'
-                        }`}
-                      >
-                        {idx < waterIntake ? (
-                          <div className="w-full bg-blue-500 h-4/5 animate-pulse" />
-                        ) : (
-                          <div className="w-full bg-slate-200 h-1/5" />
-                        )}
-                      </button>
+                {aiReport ? (
+                  <div className="bg-slate-900 border border-slate-800 rounded-2xl p-4.5 space-y-4 max-h-110 overflow-y-auto text-[11px] leading-relaxed text-slate-300">
+                    {aiReport.split("\n\n").map((para, idx) => (
+                      <p key={idx}>{para}</p>
                     ))}
                   </div>
-
-                  <div className="flex flex-col gap-1">
-                    <button 
-                      onClick={() => setWaterIntake(Math.min(waterIntake + 1, 12))}
-                      className="p-1.5 bg-blue-50 text-blue-700 hover:bg-blue-100 rounded-lg text-center font-bold text-xs"
-                    >
-                      + Cup
-                    </button>
-                    <button 
-                      onClick={() => setWaterIntake(Math.max(waterIntake - 1, 0))}
-                      className="p-1.5 bg-slate-50 text-slate-600 hover:bg-slate-100 rounded-lg text-center text-xs"
-                    >
-                      - Cup
-                    </button>
+                ) : (
+                  <div className="border border-dashed border-slate-800 rounded-2xl p-6 text-center text-[11px] text-slate-500 leading-relaxed">
+                    No Advisor Analysis Synthesized Yet. Use the button above to generate molecular insights dynamically!
                   </div>
+                )}
+              </div>
+
+              <div className="bg-white rounded-3xl p-6 border border-slate-100 shadow-sm space-y-4">
+                <h3 className="text-xs font-black text-slate-950 uppercase tracking-widest leading-none flex items-center gap-1.5">
+                  <Calendar className="h-4.5 w-4.5 text-emerald-800" /> Quick Stats Tracking
+                </h3>
+                <p className="text-[10px] text-slate-400 leading-relaxed font-semibold">
+                  Update fast indicators here to sync with the interactive canvas instantly. Or go to "Physical Symptoms" for chronological timestamped logs.
+                </p>
+
+                <div className="space-y-3 pt-2">
+                  
+                  <div className="space-y-1.5">
+                    <div className="flex justify-between items-center text-[10px]">
+                      <span className="font-bold text-slate-500 uppercase">Daily Hydration</span>
+                      <span className="font-bold text-slate-800">{waterIntake} Liters</span>
+                    </div>
+                    <input 
+                      type="range" 
+                      min="1" 
+                      max="6" 
+                      step="0.5" 
+                      value={waterIntake} 
+                      onChange={(e) => setWaterIntake(parseFloat(e.target.value))}
+                      className="w-full accent-emerald-600 cursor-pointer h-1 rounded-lg bg-slate-100" 
+                    />
+                  </div>
+
+                  <div className="space-y-1.5">
+                    <div className="flex justify-between items-center text-[10px]">
+                      <span className="font-bold text-slate-500 uppercase">Bloating Scale</span>
+                      <span className="font-bold text-slate-800">{bloatingLevel}/5</span>
+                    </div>
+                    <input 
+                      type="range" 
+                      min="1" 
+                      max="5" 
+                      value={bloatingLevel} 
+                      onChange={(e) => setBloatingLevel(parseInt(e.target.value))}
+                      className="w-full accent-emerald-600 cursor-pointer h-1 rounded-lg bg-slate-100" 
+                    />
+                  </div>
+
+                  <div className="space-y-1.5">
+                    <div className="flex justify-between items-center text-[10px]">
+                      <span className="font-bold text-slate-500 uppercase">Stress Load</span>
+                      <span className="font-bold text-slate-800">{stressLevel}/5</span>
+                    </div>
+                    <input 
+                      type="range" 
+                      min="1" 
+                      max="5" 
+                      value={stressLevel} 
+                      onChange={(e) => setStressLevel(parseInt(e.target.value))}
+                      className="w-full accent-emerald-600 cursor-pointer h-1 rounded-lg bg-slate-100" 
+                    />
+                  </div>
+
                 </div>
               </div>
 
@@ -1334,330 +1641,156 @@ export default function App() {
           </div>
         )}
 
-        {/* TAB 2: MEAL LOGGING & ANALYSIS TRACKER */}
-        {activeTab === 'meals' && (
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+
+        {activeTab === "food" && (
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 animate-fade-in">
             
-            {/* Input Form Column (Left 1/3) */}
             <div className="space-y-6">
-              <div className="bg-white rounded-3xl p-6 border border-slate-100 shadow-sm">
-                <div className="flex justify-between items-center mb-4">
-                  <h3 className="text-base font-extrabold text-slate-900">Log New Meal</h3>
-                  <button 
-                    onClick={() => setManualMode(!manualMode)}
-                    className="text-xs font-bold text-emerald-600 hover:underline"
-                  >
-                    {manualMode ? 'Use AI Auto-Parse' : 'Switch to Manual Input'}
-                  </button>
+              <div className="bg-white rounded-3xl p-6 border border-slate-100 shadow-sm space-y-6">
+                <div>
+                  <h3 className="text-base font-extrabold text-slate-950 flex items-center gap-1.5">
+                    <FileText className="h-5.5 w-5.5 text-emerald-800" /> AI Molecular Food Parser
+                  </h3>
+                  <p className="text-xs text-slate-500 mt-1 leading-relaxed">
+                    Log custom dietary items or complete dishes. Gemini will analyze the molecular fibers, macronutrients (fats, carbs, protein), vitamins, minerals, and track overall score.
+                  </p>
                 </div>
 
-                {!manualMode ? (
-                  /* AI Parsing Form */
-                  <form onSubmit={handleAIFoodParse} className="space-y-4">
-                    <div className="bg-emerald-50/50 p-3 rounded-2xl border border-emerald-100/50 mb-2">
-                      <p className="text-xs text-emerald-900 leading-relaxed font-medium">
-                        ✨ <strong>AI Auto-Parse:</strong> Type your breakfast, lunch, or snack, and our AI will break down the fibers, carbs, prebiotics, and minerals for you! You can also upload a photo.
-                      </p>
-                    </div>
+                <div className="space-y-2">
+                  <label className="block text-[10px] font-black uppercase text-slate-400">Meal Description</label>
+                  <textarea
+                    rows="4"
+                    placeholder="e.g., Greek yogurt bowl with oats, wild berries, ground flaxseed, walnuts, and a squeeze of raw honey"
+                    value={foodInput}
+                    onChange={(e) => setFoodInput(e.target.value)}
+                    className="w-full p-4 text-xs rounded-2xl border border-slate-200 focus:ring-2 focus:ring-emerald-500 focus:outline-none leading-relaxed bg-slate-50/50"
+                  />
+                </div>
 
-                    <div>
-                      <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1.5">
-                        Describe What You Ate
-                      </label>
-                      <textarea
-                        rows="3"
-                        placeholder="e.g., Sourdough bread toasted with half an avocado, dynamic microgreens, and a bowl of mixed probiotic live kefir with fresh raspberries"
-                        value={foodInput}
-                        onChange={(e) => setFoodInput(e.target.value)}
-                        className="w-full text-sm p-3 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent bg-slate-50"
-                      />
-                    </div>
+                <button
+                  type="button"
+                  onClick={handleAnalyzeFood}
+                  disabled={isAnalyzing}
+                  className="w-full bg-slate-900 hover:bg-slate-850 text-white text-xs font-bold py-3.5 px-4 rounded-xl transition flex items-center justify-center gap-1.5 shadow"
+                >
+                  {isAnalyzing ? "Querying Gemini Strains..." : "Analyze & Log Meal"}
+                </button>
 
-                    {/* Image Upload Area */}
-                    <div>
-                      <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1.5">
-                        Meal Photo (Optional but Recommended)
-                      </label>
-                      <div className="mt-1 flex justify-center px-6 pt-5 pb-6 border-2 border-slate-200 border-dashed rounded-2xl bg-slate-50 relative hover:bg-slate-100/50 transition">
-                        {imageInput ? (
-                          <div className="text-center">
-                            <img src={imageInput} alt="Preview of food" className="mx-auto h-32 w-auto rounded-xl object-cover mb-2 shadow" />
-                            <p className="text-xs text-slate-500 font-semibold mb-2">Meal photo selected</p>
-                            <button 
-                              type="button" 
-                              onClick={() => setImageInput(null)}
-                              className="text-xs text-red-500 hover:underline font-bold"
-                            >
-                              Remove Image
-                            </button>
-                          </div>
-                        ) : (
-                          <div className="space-y-1 text-center">
-                            <Camera className="mx-auto h-8 w-8 text-slate-400 stroke-[1.5]" />
-                            <div className="flex text-xs text-slate-600 justify-center">
-                              <label htmlFor="file-upload" className="relative cursor-pointer bg-white rounded-md font-semibold text-emerald-600 hover:text-emerald-500 focus-within:outline-none">
-                                <span>Upload a meal photo</span>
-                                <input id="file-upload" name="file-upload" type="file" accept="image/*" className="sr-only" onChange={handleImageUpload} />
-                              </label>
-                            </div>
-                            <p className="text-[10px] text-slate-500">PNG, JPG, GIF up to 5MB</p>
-                          </div>
-                        )}
-                      </div>
-                    </div>
-
+                <div className="border-t border-slate-100 pt-4 space-y-2">
+                  <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Quick Suggestions:</p>
+                  <div className="flex flex-wrap gap-2">
                     <button
-                      type="submit"
-                      disabled={analyzingFood}
-                      className="w-full bg-slate-900 hover:bg-slate-800 text-white font-bold p-3 rounded-xl transition text-xs flex items-center justify-center gap-2 shadow disabled:opacity-60"
+                      type="button"
+                      onClick={() => setFoodInput("Fermented kefir drink with chia seeds, pumpkin seeds, and ripe raspberries")}
+                      className="text-[10px] bg-slate-100 hover:bg-slate-200 text-slate-700 px-2.5 py-1.5 rounded-xl transition"
                     >
-                      {analyzingFood ? (
-                        <>
-                          <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                          Analyzing with Microbiome AI...
-                        </>
-                      ) : (
-                        <>
-                          <Sparkles className="h-4 w-4 text-emerald-400 fill-emerald-100" />
-                          Log with AI Analysis
-                        </>
-                      )}
+                      Kefir Seed Smoothie
                     </button>
-                  </form>
-                ) : (
-                  /* Manual Logging Form */
-                  <form onSubmit={handleManualLog} className="space-y-3 text-xs font-semibold text-slate-700">
-                    <div>
-                      <label className="block text-slate-500 uppercase tracking-wider mb-1">Meal / Food Item Name</label>
-                      <input
-                        type="text"
-                        placeholder="e.g., Chia Seed Pudding"
-                        value={manualForm.foodName}
-                        onChange={(e) => setManualForm({...manualForm, foodName: e.target.value})}
-                        className="w-full p-2.5 rounded-lg border border-slate-200 text-sm focus:outline-none"
-                      />
-                    </div>
-
-                    <div className="grid grid-cols-2 gap-2">
-                      <div>
-                        <label className="block text-slate-500 mb-1">Calories (kcal)</label>
-                        <input
-                          type="number"
-                          value={manualForm.calories}
-                          onChange={(e) => setManualForm({...manualForm, calories: e.target.value})}
-                          className="w-full p-2 rounded-lg border border-slate-200"
-                        />
-                      </div>
-                      <div>
-                        <label className="block text-slate-500 mb-1">Fibers (g)</label>
-                        <input
-                          type="number"
-                          value={manualForm.fiber}
-                          onChange={(e) => setManualForm({...manualForm, fiber: e.target.value})}
-                          className="w-full p-2 rounded-lg border border-slate-200"
-                        />
-                      </div>
-                    </div>
-
-                    <div className="grid grid-cols-3 gap-2">
-                      <div>
-                        <label className="block text-slate-500 mb-1">Carbs (g)</label>
-                        <input
-                          type="number"
-                          value={manualForm.carbs}
-                          onChange={(e) => setManualForm({...manualForm, carbs: e.target.value})}
-                          className="w-full p-1.5 rounded-lg border border-slate-200"
-                        />
-                      </div>
-                      <div>
-                        <label className="block text-slate-500 mb-1">Protein (g)</label>
-                        <input
-                          type="number"
-                          value={manualForm.protein}
-                          onChange={(e) => setManualForm({...manualForm, protein: e.target.value})}
-                          className="w-full p-1.5 rounded-lg border border-slate-200"
-                        />
-                      </div>
-                      <div>
-                        <label className="block text-slate-500 mb-1">Fats (g)</label>
-                        <input
-                          type="number"
-                          value={manualForm.fats}
-                          onChange={(e) => setManualForm({...manualForm, fats: e.target.value})}
-                          className="w-full p-1.5 rounded-lg border border-slate-200"
-                        />
-                      </div>
-                    </div>
-
-                    <div className="grid grid-cols-2 gap-2 pt-2">
-                      <div>
-                        <label className="block text-slate-500 mb-1">Prebiotics (g)</label>
-                        <input
-                          type="number"
-                          value={manualForm.prebiotics}
-                          onChange={(e) => setManualForm({...manualForm, prebiotics: e.target.value})}
-                          className="w-full p-2 rounded-lg border border-slate-200"
-                        />
-                      </div>
-                      <div>
-                        <label className="block text-slate-500 mb-1">Plant Diversity (0-5)</label>
-                        <input
-                          type="number"
-                          min="0"
-                          max="10"
-                          value={manualForm.plantDiversityPoints}
-                          onChange={(e) => setManualForm({...manualForm, plantDiversityPoints: e.target.value})}
-                          className="w-full p-2 rounded-lg border border-slate-200"
-                        />
-                      </div>
-                    </div>
-
-                    <div className="flex gap-4 pt-2 border-t border-slate-100">
-                      <label className="flex items-center gap-1.5 cursor-pointer">
-                        <input
-                          type="checkbox"
-                          checked={manualForm.probiotics}
-                          onChange={(e) => setManualForm({...manualForm, probiotics: e.target.checked})}
-                          className="rounded border-slate-300 text-emerald-600 focus:ring-emerald-500"
-                        />
-                        <span>Has Live Probiotics</span>
-                      </label>
-                      <label className="flex items-center gap-1.5 cursor-pointer">
-                        <input
-                          type="checkbox"
-                          checked={manualForm.fermented}
-                          onChange={(e) => setManualForm({...manualForm, fermented: e.target.checked})}
-                          className="rounded border-slate-300 text-emerald-600 focus:ring-emerald-500"
-                        />
-                        <span>Is Fermented Food</span>
-                      </label>
-                    </div>
-
-                    <div className="space-y-1 pt-2">
-                      <div>
-                        <label className="block text-[10px] text-slate-400 uppercase tracking-wider mb-0.5">Vitamins present (comma separated)</label>
-                        <input
-                          type="text"
-                          placeholder="Vitamin C, Vitamin B6"
-                          value={manualForm.vitamins}
-                          onChange={(e) => setManualForm({...manualForm, vitamins: e.target.value})}
-                          className="w-full p-2 rounded-lg border border-slate-200"
-                        />
-                      </div>
-                      <div>
-                        <label className="block text-[10px] text-slate-400 uppercase tracking-wider mb-0.5">Minerals present (comma separated)</label>
-                        <input
-                          type="text"
-                          placeholder="Iron, Magnesium, Zinc"
-                          value={manualForm.minerals}
-                          onChange={(e) => setManualForm({...manualForm, minerals: e.target.value})}
-                          className="w-full p-2 rounded-lg border border-slate-200"
-                        />
-                      </div>
-                    </div>
-
                     <button
-                      type="submit"
-                      className="w-full mt-2 bg-emerald-600 hover:bg-emerald-700 text-white font-bold p-3 rounded-xl transition text-xs"
+                      type="button"
+                      onClick={() => setFoodInput("Seared cod fish with sautéed spinach, steamed broccoli, olive oil, and asparagus")}
+                      className="text-[10px] bg-slate-100 hover:bg-slate-200 text-slate-700 px-2.5 py-1.5 rounded-xl transition"
                     >
-                      Add Meal Log
+                      Fish & Polyphenol Greens
                     </button>
-                  </form>
-                )}
+                  </div>
+                </div>
+
+                <div className="bg-slate-50 p-4 rounded-2xl border border-slate-100/70 text-[10px] text-slate-500 leading-relaxed">
+                  💡 <strong>Microbe Pro-tip:</strong> Adding diverse complex carbohydrates (berries, seeds, whole grains) feeds the critical mucous-thriving Akkermansia muciniphila.
+                </div>
               </div>
             </div>
 
-            {/* Meal Logs List Column (Right 2/3) */}
             <div className="lg:col-span-2 space-y-6">
               <div className="bg-white rounded-3xl p-6 border border-slate-100 shadow-sm">
-                <div className="flex items-center justify-between mb-4">
+                <div className="flex justify-between items-center mb-6 pb-4 border-b border-slate-100">
                   <div>
-                    <h3 className="text-base font-extrabold text-slate-950">Food & Nutrition Logs</h3>
-                    <p className="text-xs text-slate-500">Everything eaten in the tracking window</p>
+                    <h3 className="text-sm font-black text-slate-950 uppercase tracking-wider flex items-center gap-1.5">
+                      <Clock className="h-5 w-5 text-emerald-700" /> Molecular Food History
+                    </h3>
+                    <p className="text-xs text-slate-400 font-semibold">Timeline of logged prebiotics, fibers, and probiotics</p>
                   </div>
-                  <button 
-                    onClick={() => {
-                      setFoodLogs([]);
-                      showNotification('All food logs cleared for a fresh start!');
-                    }}
-                    className="text-xs text-red-500 hover:underline flex items-center gap-1 font-semibold"
-                  >
-                    <RotateCcw className="h-3.5 w-3.5" /> Clear All
-                  </button>
+                  {foodLogs.length > 0 && (
+                    <button
+                      onClick={() => {
+                        setFoodLogs([]);
+                        showNotification("Timeline logs cleared!");
+                      }}
+                      className="text-xs text-red-500 hover:underline flex items-center gap-1 font-semibold"
+                    >
+                      <RotateCcw className="h-3.5 w-3.5" /> Clear History
+                    </button>
+                  )}
                 </div>
 
                 {foodLogs.length === 0 ? (
-                  <div className="text-center py-12 px-4 border border-slate-100 rounded-2xl bg-slate-50/50">
-                    <Apple className="h-12 w-12 text-slate-300 mx-auto mb-3" />
-                    <h4 className="text-sm font-bold text-slate-700">No Food Logged Today</h4>
-                    <p className="text-xs text-slate-400 max-w-xs mx-auto mt-1">
-                      Enter food details on the left using description text or photo analysis!
-                    </p>
+                  <div className="text-center py-16">
+                    <Layers className="h-12 w-12 text-slate-300 mx-auto mb-3" />
+                    <h4 className="text-xs font-black text-slate-700 uppercase tracking-widest">No Food Items Logged</h4>
+                    <p className="text-xs text-slate-400 mt-1">Submit meal parameters using our AI Parser column to populate your profile.</p>
                   </div>
                 ) : (
                   <div className="space-y-4">
                     {foodLogs.map((log) => (
-                      <div key={log.id} className="p-4 rounded-2xl border border-slate-100 hover:border-slate-200 bg-slate-50/40 relative group transition">
-                        
-                        <div className="flex items-start justify-between gap-4">
-                          <div className="space-y-1">
-                            <span className="text-[10px] text-slate-400 font-mono flex items-center gap-1">
-                              <Clock className="h-3 w-3" /> 
-                              {new Date(log.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                            </span>
-                            <h4 className="text-sm font-bold text-slate-900 leading-snug">{log.foodName}</h4>
+                      <div key={log.id} className="p-4.5 rounded-2xl bg-slate-50/50 border border-slate-100 flex items-start justify-between gap-4 flex-col">
+                        <div className="space-y-2.5 w-full">
+                          
+                          <div className="flex items-center justify-between w-full">
+                            <div className="flex items-center gap-2 flex-wrap">
+                              <span className="text-[9px] font-bold text-emerald-800 bg-emerald-50 border border-emerald-100 px-2 py-0.5 rounded-md uppercase">
+                                Fiber: {log.fiber}g
+                              </span>
+                              <span className="text-[10px] text-slate-400 font-semibold">
+                                {new Date(log.timestamp).toLocaleDateString([], { weekday: 'short', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}
+                              </span>
+                            </div>
+                            
+                            <div className="flex items-center gap-3">
+                              <div className="text-right">
+                                <span className="text-[8px] font-bold text-slate-400 uppercase tracking-wider block">Score Impact</span>
+                                <span className="text-xs font-black text-slate-900 font-mono mt-0.5 block">{log.score}/100</span>
+                              </div>
+                              <button
+                                onClick={() => {
+                                  setFoodLogs(foodLogs.filter((f) => f.id !== log.id));
+                                  showNotification("Food entry deleted.");
+                                }}
+                                className="text-slate-400 hover:text-red-500 p-1.5 rounded-lg hover:bg-red-50 transition"
+                                title="Delete entry"
+                              >
+                                <Trash2 className="h-4 w-4" />
+                              </button>
+                            </div>
                           </div>
                           
-                          <button
-                            onClick={() => deleteLog(log.id)}
-                            className="text-slate-400 hover:text-red-500 transition-colors p-1 rounded-lg hover:bg-red-50"
-                          >
-                            <Trash2 className="h-4 w-4" />
-                          </button>
-                        </div>
+                          <h4 className="text-xs font-black text-slate-900 leading-relaxed">{log.food}</h4>
 
-                        {/* Nutrition pill summaries */}
-                        <div className="mt-3 flex flex-wrap gap-2 text-[10px] font-bold">
-                          <span className="bg-slate-100 text-slate-800 px-2 py-0.5 rounded-md">
-                            {log.calories} kcal
-                          </span>
-                          <span className="bg-emerald-50 text-emerald-800 px-2 py-0.5 rounded-md border border-emerald-100/60">
-                            Fiber: {log.fiber}g
-                          </span>
-                          {log.prebiotics > 0 && (
-                            <span className="bg-blue-50 text-blue-800 px-2 py-0.5 rounded-md border border-blue-100/60">
-                              Prebiotics: {log.prebiotics}g
-                            </span>
-                          )}
-                          {log.probiotics && (
-                            <span className="bg-pink-50 text-pink-800 px-2 py-0.5 rounded-md border border-pink-100/60">
-                              Live Cultures
-                            </span>
-                          )}
-                          {log.fermented && (
-                            <span className="bg-purple-50 text-purple-800 px-2 py-0.5 rounded-md border border-purple-100/60">
-                              Fermented
-                            </span>
-                          )}
-                          {log.plantDiversityPoints > 0 && (
-                            <span className="bg-amber-50 text-amber-800 px-2 py-0.5 rounded-md border border-amber-100/60">
-                              🌱 Diversity Points: +{log.plantDiversityPoints}
-                            </span>
-                          )}
-                        </div>
-
-                        {/* Vitamins/Minerals listing */}
-                        {(log.vitamins?.length > 0 || log.minerals?.length > 0) && (
-                          <div className="mt-2.5 pt-2 border-t border-slate-100/60 text-[10px] text-slate-500 flex flex-wrap gap-x-4 gap-y-1">
-                            {log.vitamins?.length > 0 && (
-                              <span><strong>Vitamins:</strong> {log.vitamins.join(', ')}</span>
-                            )}
-                            {log.minerals?.length > 0 && (
-                              <span><strong>Minerals:</strong> {log.minerals.join(', ')}</span>
-                            )}
+                          <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 border-y border-slate-100/80 py-2.5">
+                            <div className="bg-slate-100 text-slate-700 text-[10px] p-1.5 rounded-lg font-semibold text-center">
+                              🍞 Carbs: <span className="font-bold">{log.carbs || 12}g</span>
+                            </div>
+                            <div className="bg-slate-100 text-slate-700 text-[10px] p-1.5 rounded-lg font-semibold text-center">
+                              🥩 Protein: <span className="font-bold">{log.protein || 6}g</span>
+                            </div>
+                            <div className="bg-slate-100 text-slate-700 text-[10px] p-1.5 rounded-lg font-semibold text-center">
+                              🥑 Fats: <span className="font-bold">{log.fats || 4}g</span>
+                            </div>
+                            <div className="bg-slate-100 text-slate-700 text-[10px] p-1.5 rounded-lg font-semibold text-center truncate" title={log.vitamins}>
+                              🍊 Vitamins: <span className="font-bold text-[9px] block truncate">{log.vitamins || "None"}</span>
+                            </div>
                           </div>
-                        )}
+                          
+                          <div className="flex flex-wrap gap-x-4 gap-y-1 text-[10px] pt-1">
+                            <p className="text-slate-500 font-medium">
+                              <span className="font-bold text-slate-400 uppercase tracking-wider text-[9px]">Prebiotics:</span> {log.prebiotics}
+                            </p>
+                            <p className="text-slate-500 font-medium">
+                              <span className="font-bold text-slate-400 uppercase tracking-wider text-[9px]">Probiotics:</span> {log.probiotics}
+                            </p>
+                          </div>
 
+                        </div>
                       </div>
                     ))}
                   </div>
@@ -1668,11 +1801,10 @@ export default function App() {
           </div>
         )}
 
-        {/* TAB 3: PHYSICAL SYMPTOMS LOG */}
+
         {activeTab === 'symptoms' && (
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
             
-            {/* Bristol Stool Chart Selector (2/3 width) */}
             <div className="lg:col-span-2 space-y-6">
               <div className="bg-white rounded-3xl p-6 border border-slate-100 shadow-sm">
                 <div>
@@ -1709,9 +1841,9 @@ export default function App() {
                           <span className={`text-[9px] font-semibold uppercase px-1.5 py-0.5 rounded-md ${
                             stoolType === item.type 
                               ? 'bg-white/10 text-white' 
-                              : item.rating === 'excellent' 
+                              : item.rating === 'excellent' || item.rating === 'normal / optimal' || item.rating === 'excellent / perfect'
                               ? 'bg-emerald-50 text-emerald-800' 
-                              : item.rating === 'moderate' 
+                              : item.rating === 'mild constipation' || item.rating === 'mild diarrhea' || item.rating === 'low fiber transit'
                               ? 'bg-amber-50 text-amber-800' 
                               : 'bg-red-50 text-red-800'
                           }`}>
@@ -1726,7 +1858,6 @@ export default function App() {
                   ))}
                 </div>
 
-                {/* Submit Stool Log Form */}
                 <div className="mt-6 p-4 bg-slate-50 rounded-2xl border border-slate-100 space-y-4">
                   <h4 className="text-xs font-black uppercase text-slate-600 tracking-wider flex items-center gap-1.5">
                     <Clock className="h-4 w-4 text-emerald-600" /> Stool Log Details
@@ -1745,7 +1876,7 @@ export default function App() {
                       <label className="block text-[10px] text-slate-400 font-bold uppercase mb-1">Add Notes (Optional)</label>
                       <input
                         type="text"
-                        placeholder="e.g., after lunch, felt normal"
+                        placeholder="e.g., after breakfast, normal motility"
                         value={stoolNotes}
                         onChange={(e) => setStoolNotes(e.target.value)}
                         className="w-full text-xs p-2.5 rounded-xl border border-slate-200 bg-white focus:ring-2 focus:ring-emerald-500 focus:outline-none"
@@ -1763,7 +1894,6 @@ export default function App() {
               </div>
             </div>
 
-            {/* Other Symptoms Column (1/3 width) */}
             <div className="space-y-6">
               
               <div className="bg-white rounded-3xl p-6 border border-slate-100 shadow-sm space-y-6">
@@ -1772,7 +1902,6 @@ export default function App() {
                   <p className="text-xs text-slate-500">Track physical cues for AI correlation as often as you wish with custom timestamps.</p>
                 </div>
 
-                {/* Bloating Slider */}
                 <div className="p-4 bg-slate-50/50 rounded-2xl border border-slate-100 space-y-3">
                   <div className="flex justify-between items-center">
                     <label className="text-xs font-extrabold text-slate-700">Bloating/Distension</label>
@@ -1802,7 +1931,7 @@ export default function App() {
                       <span className="text-slate-400 font-bold uppercase">Notes</span>
                       <input
                         type="text"
-                        placeholder="e.g., after broccoli"
+                        placeholder="e.g., after carbonation"
                         value={bloatingNotes}
                         onChange={(e) => setBloatingNotes(e.target.value)}
                         className="w-full mt-0.5 p-1.5 rounded-lg border border-slate-200 bg-white text-[11px]"
@@ -1818,7 +1947,6 @@ export default function App() {
                   </button>
                 </div>
 
-                {/* Energy Slider */}
                 <div className="p-4 bg-slate-50/50 rounded-2xl border border-slate-100 space-y-3">
                   <div className="flex justify-between items-center">
                     <label className="text-xs font-extrabold text-slate-700">Energy & Vitality</label>
@@ -1848,7 +1976,7 @@ export default function App() {
                       <span className="text-slate-400 font-bold uppercase">Notes</span>
                       <input
                         type="text"
-                        placeholder="e.g., midday crash"
+                        placeholder="e.g., stable energy"
                         value={energyNotes}
                         onChange={(e) => setEnergyNotes(e.target.value)}
                         className="w-full mt-0.5 p-1.5 rounded-lg border border-slate-200 bg-white text-[11px]"
@@ -1864,7 +1992,6 @@ export default function App() {
                   </button>
                 </div>
 
-                {/* Sleep Slider */}
                 <div className="p-4 bg-slate-50/50 rounded-2xl border border-slate-100 space-y-3">
                   <div className="flex justify-between items-center">
                     <label className="text-xs font-extrabold text-slate-700">Sleep Quality</label>
@@ -1895,7 +2022,7 @@ export default function App() {
                       <span className="text-slate-400 font-bold uppercase">Notes</span>
                       <input
                         type="text"
-                        placeholder="e.g., woke up once"
+                        placeholder="e.g., woke up rested"
                         value={sleepNotes}
                         onChange={(e) => setSleepNotes(e.target.value)}
                         className="w-full mt-0.5 p-1.5 rounded-lg border border-slate-200 bg-white text-[11px]"
@@ -1911,7 +2038,6 @@ export default function App() {
                   </button>
                 </div>
 
-                {/* Stress Slider */}
                 <div className="p-4 bg-slate-50/50 rounded-2xl border border-slate-100 space-y-3">
                   <div className="flex justify-between items-center">
                     <label className="text-xs font-extrabold text-slate-700 flex items-center gap-1.5">
@@ -1943,7 +2069,7 @@ export default function App() {
                       <span className="text-slate-400 font-bold uppercase">Notes</span>
                       <input
                         type="text"
-                        placeholder="e.g., tight deadline"
+                        placeholder="e.g., deadline hustle"
                         value={stressNotes}
                         onChange={(e) => setStressNotes(e.target.value)}
                         className="w-full mt-0.5 p-1.5 rounded-lg border border-slate-200 bg-white text-[11px]"
@@ -1967,7 +2093,6 @@ export default function App() {
 
             </div>
 
-            {/* Bottom Full-Width Section: Historical Symptom Timeline Logs */}
             <div className="lg:col-span-3 bg-white rounded-3xl p-6 border border-slate-100 shadow-sm">
               <div className="flex items-center justify-between mb-4 border-b border-slate-100 pb-3">
                 <div>
@@ -2051,260 +2176,66 @@ export default function App() {
           </div>
         )}
 
-        {/* TAB 4: AI MICROBIOME ADVISOR CONSOLE */}
-        {activeTab === 'advisor' && (
-          <div className="space-y-6">
-            
-            {/* Header description */}
-            <div className="bg-white rounded-3xl p-6 sm:p-8 border border-slate-100 shadow-sm">
-              <div className="max-w-3xl space-y-4">
-                <span className="inline-flex items-center gap-1.5 bg-emerald-100 text-emerald-800 px-3 py-1 rounded-full text-xs font-bold uppercase">
-                  <Sparkles className="h-3 w-3" /> Predictive Microbiome Report Generator
-                </span>
-                <h2 className="text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight">
-                  Consult the Gut Intelligence AI
-                </h2>
-                <p className="text-sm text-slate-600 leading-relaxed">
-                  Synthesize your meal logs, prebiotic inputs, vitamins, minerals, water intake, stool quality, and physiological symptoms to predict which microbial populations are thriving or suffering, understand gut-brain interactions, and get dynamic recipes custom-fit to optimize your unique digestive ecosystem.
-                </p>
 
-                <button
-                  onClick={generateMicrobiomeReport}
-                  disabled={generatingReport || foodLogs.length === 0}
-                  className="inline-flex items-center gap-2.5 bg-slate-900 hover:bg-slate-800 text-white font-extrabold px-6 py-3 rounded-2xl text-xs transition shadow-lg transition-transform hover:scale-[1.02] disabled:opacity-50"
-                >
-                  {generatingReport ? (
-                    <>
-                      <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                      Generating Comprehensive Synthesis...
-                    </>
-                  ) : (
-                    <>
-                      <Sparkles className="h-4 w-4 text-emerald-400 fill-emerald-100" />
-                      Generate Microbiome Health Report
-                    </>
-                  )}
-                </button>
-                {foodLogs.length === 0 && (
-                  <p className="text-xs text-amber-600 font-semibold">Please log at least one meal to generate a report.</p>
-                )}
+        {activeTab === "education" && (
+          <div className="space-y-8 animate-fade-in">
+            
+            <div className="p-8 rounded-3xl bg-emerald-950 text-white relative overflow-hidden shadow-md">
+              <div className="max-w-2xl z-10 relative space-y-3.5">
+                <span className="text-[10px] bg-emerald-800 text-emerald-300 font-bold tracking-widest px-2.5 py-1 rounded-md uppercase">Hand-Curated Ecology</span>
+                <h2 className="text-lg font-black tracking-tight sm:text-xl">The Molecular Guide to your Microbiome Ecosystem</h2>
+                <p className="text-xs text-emerald-200 leading-relaxed">
+                  Inside your digestive colon lives over 100 trillion microbial organism cells. This library explains how prebiotic starches, live probiotic fermentation, and the dynamic nervous system highway control your daily immune health.
+                </p>
+              </div>
+              <div className="absolute right-0 bottom-0 top-0 w-1/3 opacity-15 pointer-events-none hidden md:block">
+                <Sparkles className="w-full h-full text-emerald-300" />
               </div>
             </div>
 
-            {/* AI Report Render Area */}
-            {aiReport ? (
-              <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-                
-                {/* Main analysis cards (2/3 width) */}
-                <div className="lg:col-span-2 space-y-6">
-                  
-                  {/* Synthesis Overview and Gut status */}
-                  <div className="bg-white rounded-3xl p-6 border border-slate-100 shadow-sm space-y-4">
-                    <div className="flex items-center justify-between border-b border-slate-100 pb-3">
-                      <h3 className="font-extrabold text-slate-900 text-base">Gut State Prediction</h3>
-                      <span className="bg-emerald-100 text-emerald-800 px-3 py-1 rounded-lg text-xs font-extrabold">
-                        {aiReport.overallStatus}
-                      </span>
-                    </div>
-                    
-                    <div className="space-y-4 text-xs sm:text-sm text-slate-700 leading-relaxed">
-                      <div>
-                        <h4 className="font-bold text-slate-900 mb-1 flex items-center gap-1.5">
-                          <Activity className="h-4 w-4 text-emerald-600" /> Key Bacterial Flora Impact Breakdown
-                        </h4>
-                        <p className="bg-slate-50 p-4 rounded-xl text-slate-600">{aiReport.gutMicrobialBreakdown}</p>
-                      </div>
-
-                      <div>
-                        <h4 className="font-bold text-slate-900 mb-1 flex items-center gap-1.5">
-                          <TrendingUp className="h-4 w-4 text-blue-500" /> Symptom Correlation Explanation
-                        </h4>
-                        <p className="bg-slate-50 p-4 rounded-xl text-slate-600">{aiReport.symptomCorrelation}</p>
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Microbiome Power Recipe */}
-                  {aiReport.microbiomePowerRecipe && (
-                    <div className="bg-gradient-to-br from-emerald-50 to-white rounded-3xl p-6 border border-emerald-100 shadow-sm space-y-4">
-                      <div className="flex items-center gap-2">
-                        <span className="p-2 bg-emerald-100 text-emerald-800 rounded-xl">
-                          <Apple className="h-5 w-5" />
-                        </span>
-                        <div>
-                          <h3 className="font-bold text-slate-900 text-sm">Today's Microbiome Power Recipe</h3>
-                          <p className="text-[11px] text-slate-500">Dynamic recipe formulated to nourish beneficial strains</p>
-                        </div>
-                      </div>
-
-                      <div className="bg-white rounded-2xl p-4 sm:p-5 border border-emerald-200/50 space-y-3">
-                        <h4 className="text-base font-bold text-slate-900 flex items-center gap-1.5">
-                          🍲 {aiReport.microbiomePowerRecipe.name}
-                        </h4>
-                        <p className="text-xs text-slate-600 italic">
-                          {aiReport.microbiomePowerRecipe.benefits}
-                        </p>
-
-                        <div className="space-y-2 text-xs pt-2">
-                          <h5 className="font-bold text-slate-900 uppercase tracking-wide text-[10px] text-slate-400">Targeted Ingredients</h5>
-                          <ul className="grid grid-cols-1 md:grid-cols-2 gap-x-4 gap-y-1 text-slate-700 list-disc list-inside">
-                            {aiReport.microbiomePowerRecipe.ingredients.map((ingredient, i) => (
-                              <li key={i}>{ingredient}</li>
-                            ))}
-                          </ul>
-                        </div>
-
-                        <div className="space-y-1.5 text-xs pt-2">
-                          <h5 className="font-bold text-slate-900 uppercase tracking-wide text-[10px] text-slate-400">Preparation Instructions</h5>
-                          <p className="text-slate-600 leading-relaxed whitespace-pre-line">{aiReport.microbiomePowerRecipe.instructions}</p>
-                        </div>
-                      </div>
-                    </div>
-                  )}
-
-                </div>
-
-                {/* Target additions/limits checklist */}
-                <div className="space-y-6">
-                  
-                  <div className="bg-white rounded-3xl p-6 border border-slate-100 shadow-sm space-y-6">
-                    
-                    {/* Additions */}
-                    <div className="space-y-3">
-                      <h4 className="text-xs font-black uppercase text-emerald-800 tracking-wider flex items-center gap-1.5">
-                        <CheckCircle className="h-4 w-4" /> Highly Beneficial Additions
-                      </h4>
-                      <p className="text-xs text-slate-500">Add these to feed optimal microbes</p>
-                      <div className="space-y-2">
-                        {aiReport.beneficialAdditions.map((item, i) => (
-                          <div key={i} className="flex gap-2 p-2.5 bg-emerald-50/50 border border-emerald-100/50 rounded-xl items-center">
-                            <span className="w-1.5 h-1.5 bg-emerald-600 rounded-full flex-shrink-0" />
-                            <span className="text-xs font-bold text-slate-800">{item}</span>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-
-                    {/* Reductions */}
-                    <div className="space-y-3 pt-4 border-t border-slate-100">
-                      <h4 className="text-xs font-black uppercase text-amber-800 tracking-wider flex items-center gap-1.5">
-                        <AlertCircle className="h-4 w-4" /> Optimization Targets
-                      </h4>
-                      <p className="text-xs text-slate-500">Reduce or limit these elements to prevent dysbiosis triggers</p>
-                      <div className="space-y-2">
-                        {aiReport.reductiveTargets.map((item, i) => (
-                          <div key={i} className="flex gap-2 p-2.5 bg-amber-50/50 border border-amber-100/50 rounded-xl items-center">
-                            <span className="w-1.5 h-1.5 bg-amber-600 rounded-full flex-shrink-0" />
-                            <span className="text-xs font-bold text-slate-800">{item}</span>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-
-                  </div>
-
-                </div>
-
-              </div>
-            ) : (
-              /* Prompt when report hasn't been generated yet */
-              <div className="bg-slate-50 text-slate-500 text-center py-12 px-4 rounded-3xl border border-dashed border-slate-200">
-                <Sparkles className="h-10 w-10 text-slate-300 mx-auto mb-3" />
-                <h4 className="text-sm font-bold text-slate-700">No Consultation Generated Yet</h4>
-                <p className="text-xs text-slate-400 max-w-xs mx-auto mt-1">
-                  Click the button above to synthesize your logged meals and custom lifestyle stats.
-                </p>
-              </div>
-            )}
-
-          </div>
-        )}
-
-        {/* TAB 5: MICROBIOME ENCYCLOPEDIA */}
-        {activeTab === 'encyclopedia' && (
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-            
-            {/* Main content educational cards (2/3 width) */}
-            <div className="lg:col-span-2 space-y-6">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
               
-              <div className="bg-white rounded-3xl p-6 border border-slate-100 shadow-sm space-y-4">
-                <h3 className="text-base font-extrabold text-slate-900 flex items-center gap-1.5">
-                  <BookOpen className="h-5 w-5 text-emerald-600" /> Understanding Prebiotics vs. Probiotics
-                </h3>
+              <div className="bg-white p-6 rounded-2xl border border-slate-100 shadow-sm space-y-4">
+                <div className="h-10 w-10 bg-emerald-50 text-emerald-800 rounded-xl flex items-center justify-center">
+                  <Layers className="h-5 w-5" />
+                </div>
+                <h3 className="text-sm font-black text-slate-950 uppercase tracking-wider">1. Prebiotic Fertilizers</h3>
                 <p className="text-xs text-slate-500 leading-relaxed">
-                  The human gut microbiome contains trillions of organisms that govern metabolism, nutrient synthesis, gut barrier strength, and immunomodulatory pathways. To achieve clinical symbiosis, we must address both the organisms themselves and their fuels.
+                  Prebiotics are structural, non-digestible plant carbohydrates that slide past your small intestine untouched. When they land in your colon, good microbes ferment them into vital Short-Chain Fatty Acids (SCFAs) like acetate, propionate, and butyrate.
                 </p>
-
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-2">
-                  <div className="p-4 bg-emerald-50/40 rounded-2xl border border-emerald-100">
-                    <h4 className="text-xs font-black uppercase text-emerald-800 tracking-wider mb-1">
-                      Prebiotics (The Fiber Food)
-                    </h4>
-                    <p className="text-xs text-slate-600 leading-relaxed mb-3">
-                      These are non-digestible dietary compounds (mostly complex starches and soluble fibers) that bypass our stomach digestion to feed beneficial gut species in the large intestine.
-                    </p>
-                    <span className="text-[10px] font-bold text-slate-400 block uppercase tracking-wider mb-1">Key Bacterial Recipients:</span>
-                    <p className="text-xs text-slate-700 font-medium">Bifidobacterium, Faecalibacterium prausnitzii (highly anti-inflammatory).</p>
-                  </div>
-
-                  <div className="p-4 bg-blue-50/40 rounded-2xl border border-blue-100">
-                    <h4 className="text-xs font-black uppercase text-blue-800 tracking-wider mb-1">
-                      Probiotics (The Live Organisms)
-                    </h4>
-                    <p className="text-xs text-slate-600 leading-relaxed mb-3">
-                      These are active, living bacteria cultures present in fermented foods or dietary capsules that actively repopulate, transiently assist, or outcompete bad pathogenic bacteria.
-                    </p>
-                    <span className="text-[10px] font-bold text-slate-400 block uppercase tracking-wider mb-1">Primary Families:</span>
-                    <p className="text-xs text-slate-700 font-medium">Lactobacillus strains, Bifidobacterium animalis, Saccharomyces boulardii.</p>
-                  </div>
+                <div className="bg-slate-50 p-3 rounded-xl border border-slate-100 text-[11px] space-y-1.5">
+                  <p className="font-bold text-slate-700">Prime Prebiotic Families:</p>
+                  <p className="text-slate-500"><strong>Inulin:</strong> Found in garlic, leeks, onions, asparagus, chicory root.</p>
+                  <p className="text-slate-500"><strong>Beta-Glucan:</strong> Found in whole oats, barley, and medicinal mushrooms.</p>
                 </div>
               </div>
 
-              {/* Gut Microbiome-Brain Axis connection card */}
-              <div className="bg-gradient-to-r from-slate-900 to-indigo-950 text-white rounded-3xl p-6 sm:p-8 space-y-4 shadow-lg">
-                <span className="text-[10px] font-bold bg-indigo-500/20 text-indigo-300 border border-indigo-500/30 px-2.5 py-1 rounded-md uppercase">
-                  Gut-Brain Axis (Vagus Highway)
-                </span>
-                <h3 className="text-lg font-black tracking-tight">How Gut Bacteria Command Mood & Serotonin</h3>
-                <p className="text-xs sm:text-sm text-slate-300 leading-relaxed">
-                  Roughly **90% of your body's Serotonin** (the key neurotransmitter dictating sleep, happiness, and steady digestion) is manufactured right inside your intestinal tract by specialized gut microbes reacting to dietary fiber breakdown. High stress triggers hormonal cascades that decrease protective mucus, making it imperative to eat raw prebiotic vegetation to keep these neural pathways clear!
+              <div className="bg-white p-6 rounded-2xl border border-slate-100 shadow-sm space-y-4">
+                <div className="h-10 w-10 bg-blue-50 text-blue-800 rounded-xl flex items-center justify-center">
+                  <Activity className="h-5 w-5" />
+                </div>
+                <h3 className="text-sm font-black text-slate-950 uppercase tracking-wider">2. Live Probiotic Strains</h3>
+                <p className="text-xs text-slate-500 leading-relaxed">
+                  Probiotics are live active bacteria cultures introduced through fermented foods or targeted supplements. Instead of colonizing your gut forever, they act as active transient passengers that quiet pathogens and boost immune signals.
                 </p>
-              </div>
-
-            </div>
-
-            {/* Encyclopedia Tables/Guides (1/3 width) */}
-            <div className="space-y-6">
-              
-              {/* Prebiotics Table list */}
-              <div className="bg-white rounded-3xl p-6 border border-slate-100 shadow-sm space-y-4">
-                <div>
-                  <h4 className="text-xs font-extrabold text-slate-900 uppercase tracking-wider">Prebiotic Sources</h4>
-                  <p className="text-[11px] text-slate-500">The primary structural nutrients for gut bacteria</p>
-                </div>
-                <div className="space-y-3">
-                  {PREBIOTIC_SOURCES.map((source, i) => (
-                    <div key={i} className="text-xs border-b border-slate-100 pb-2 last:border-0 last:pb-0">
-                      <span className="font-bold text-emerald-800">{source.name}</span>
-                      <p className="text-slate-500 text-[11px] mt-0.5 leading-relaxed">{source.foods}</p>
-                    </div>
-                  ))}
+                <div className="bg-slate-50 p-3 rounded-xl border border-slate-100 text-[11px] space-y-1.5">
+                  <p className="font-bold text-slate-700">Traditional Probiotic Sources:</p>
+                  <p className="text-slate-500"><strong>Sauerkraut & Kimchi:</strong> Loaded with wild *Lactobacillus* and *Leuconostoc*.</p>
+                  <p className="text-slate-500"><strong>Organic Kefir:</strong> Houses over 30 distinct bacterial and yeast strains.</p>
                 </div>
               </div>
 
-              {/* Probiotics Ferments List */}
-              <div className="bg-white rounded-3xl p-6 border border-slate-100 shadow-sm space-y-4">
-                <div>
-                  <h4 className="text-xs font-extrabold text-slate-950 uppercase tracking-wider">Probiotic Sources</h4>
-                  <p className="text-[11px] text-slate-500">Traditional fermented flora builders</p>
+              <div className="bg-white p-6 rounded-2xl border border-slate-100 shadow-sm space-y-4">
+                <div className="h-10 w-10 bg-indigo-50 text-indigo-800 rounded-xl flex items-center justify-center">
+                  <Heart className="h-5 w-5" />
                 </div>
-                <div className="space-y-3">
-                  {PROBIOTIC_SOURCES.map((source, i) => (
-                    <div key={i} className="text-xs border-b border-slate-100 pb-2 last:border-0 last:pb-0">
-                      <span className="font-bold text-blue-800">{source.name}</span>
-                      <p className="text-slate-500 text-[11px] mt-0.5 leading-relaxed">{source.foods}</p>
-                    </div>
-                  ))}
+                <h3 className="text-sm font-black text-slate-950 uppercase tracking-wider">3. The Vagus Highway</h3>
+                <p className="text-xs text-slate-500 leading-relaxed">
+                  Your gut and your brain are hardwired through the giant 10th cranial nerve—the **vagus nerve**. Over 90% of your body's serotonin is produced directly by gut cells, sending immediate status signals back to your brain regarding mood, sleep, and emotional stress.
+                </p>
+                <div className="bg-slate-50 p-3 rounded-xl border border-slate-100 text-[11px] space-y-1.5">
+                  <p className="font-bold text-slate-700">Stress & Motility Impact:</p>
+                  <p className="text-slate-500">Elevated stress triggers adrenaline, restricting oxygen to your gut lining and causing good *Bifidobacteria* to plummet, which can lead to bloating.</p>
                 </div>
               </div>
 
@@ -2315,12 +2246,17 @@ export default function App() {
 
       </main>
 
-      <footer className="bg-white border-t border-slate-100 mt-16 py-8">
-        <div className="max-w-7xl mx-auto px-4 text-center space-y-2">
-          <p className="text-xs text-slate-500 font-bold">MycoBiome Gut Health AI Tracker — Empowered by Google Gemini & Live Microbe Simulation</p>
-          <p className="text-[10px] text-slate-400">Disclaimer: Predictions are for educational purposes. Consult a gastroenterologist or clinical dietitian for personal health decisions.</p>
+      <footer className="bg-white border-t border-slate-100 mt-20">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 flex flex-col sm:flex-row items-center justify-between gap-4 text-[11px] font-semibold text-slate-400">
+          <p>© 2026 MycoBiome AI. Curate your ecosystem, cultivate your health.</p>
+          <div className="flex gap-4">
+            <a href="https://aistudio.google.com/" target="_blank" rel="noopener noreferrer" className="hover:text-slate-900 transition">Get Gemini Token</a>
+            <span className="text-slate-200">|</span>
+            <span className="text-emerald-700">Molecular Gut Sync Bridge v5</span>
+          </div>
         </div>
       </footer>
+
     </div>
   );
 }
