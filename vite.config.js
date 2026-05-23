@@ -6,8 +6,8 @@ import tailwindcss from "@tailwindcss/vite";
 export default defineConfig({
   plugins: [react(), tailwindcss()],
   build: {
-    // Explicitly direct Vite to compile files into 'build' to match Vercel's current expectations
-    outDir: "build", 
+    // Direct Vite to compile files into 'dist' to match Vercel's current expectations
+    outDir: "dist", 
     target: "es2022", // Explicitly target es2022 to enable modern features
   },
   esbuild: {
