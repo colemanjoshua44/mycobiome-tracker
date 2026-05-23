@@ -125,7 +125,9 @@ export default function App() {
   const [authName, setAuthName] = useState('');
   const [authSecurityQuestion, setAuthSecurityQuestion] = useState(SECURITY_QUESTIONS[0]);
   const [authSecurityAnswer, setAuthSecurityAnswer] = useState('');
+  const [authAgreed, setAuthAgreed] = useState(false);
   const [showAuthModal, setShowAuthModal] = useState(false);
+  const [showDisclaimerModal, setShowDisclaimerModal] = useState(false);
 
   const [recoveredQuestion, setRecoveredQuestion] = useState('');
   const [recoveryAnswerAttempt, setRecoveryAnswerAttempt] = useState('');
@@ -242,6 +244,10 @@ export default function App() {
       showNotification('Please fill in all fields including the Security Question!');
       return;
     }
+    if (!authAgreed) {
+      showNotification('You must read and accept the Medical Disclaimer & Terms of Service to sign up!');
+      return;
+    }
     const db = getDatabase();
     if (db[authEmail]) {
       showNotification('Account with this email already exists!');
@@ -316,6 +322,7 @@ export default function App() {
     setAuthPassword('');
     setAuthName('');
     setAuthSecurityAnswer('');
+    setAuthAgreed(false);
     setRecoveryEmail('');
     setRecoveryAnswerAttempt('');
     setNewPassword('');
@@ -1204,6 +1211,20 @@ Format the output cleanly in normal conversational paragraphs with distinct head
                     </div>
                   </div>
 
+                  {/* Mandatory Medical Disclaimer Checkbox */}
+                  <div className="flex items-start gap-2.5 pt-2 border-t border-slate-100">
+                    <input
+                      type="checkbox"
+                      id="disclaimer-agreement"
+                      checked={authAgreed}
+                      onChange={(e) => setAuthAgreed(e.target.checked)}
+                      className="mt-1 h-4 w-4 rounded text-emerald-600 focus:ring-emerald-500 border-slate-300 cursor-pointer"
+                    />
+                    <label htmlFor="disclaimer-agreement" className="text-[10.5px] text-slate-500 leading-normal font-medium cursor-pointer">
+                      I agree to the <button type="button" onClick={() => setShowDisclaimerModal(true)} className="text-emerald-700 font-bold underline hover:text-emerald-800">Medical Disclaimer & Terms of Service</button>. I understand that MyBiome is not a clinical medical device.
+                    </label>
+                  </div>
+
                   <button
                     type="submit"
                     className="w-full bg-emerald-950 hover:bg-emerald-900 text-white text-xs font-bold py-3.5 rounded-xl transition shadow mt-1.5"
@@ -1537,6 +1558,57 @@ Format the output cleanly in normal conversational paragraphs with distinct head
         </div>
       )}
 
+      {/* Robust Medical Disclaimer & Terms of Service Modal */}
+      {showDisclaimerModal && (
+        <div className="fixed inset-0 bg-slate-950/50 backdrop-blur-sm flex items-center justify-center z-[60] p-4">
+          <div className="bg-white rounded-3xl p-6.5 max-w-lg w-full border border-slate-100 shadow-2xl relative max-h-[85vh] overflow-y-auto animate-fade-in">
+            <button
+              type="button"
+              onClick={() => setShowDisclaimerModal(false)}
+              className="absolute top-4 right-4 text-slate-400 hover:text-slate-950 p-1 rounded-xl hover:bg-slate-50 transition"
+            >
+              <X className="h-5 w-5" />
+            </button>
+
+            <div className="mb-4">
+              <h3 className="text-base font-black text-slate-950 flex items-center gap-1.5">
+                <Info className="h-5 w-5 text-emerald-800" /> Medical Disclaimer & Terms of Service
+              </h3>
+              <p className="text-[11px] text-slate-400 font-semibold uppercase tracking-wider mt-0.5">Please read before registering or tracking</p>
+            </div>
+
+            <div className="space-y-4 text-xs leading-relaxed text-slate-600 font-medium pr-1">
+              <p>
+                <strong>1. Not Medical Advice:</strong> MyBiome is an interactive self-tracking and educational database utility. All tools, calculations (including the Microbiome Well-being Score), visualizations, educational text, and dynamically compiled Gemini AI reports are created for informational, self-discovery, and general wellness purposes only.
+              </p>
+              <p>
+                <strong>2. No Clinical Diagnostics:</strong> This software is not a medical device (or Software as a Medical Device / SaMD) as defined by the Food and Drug Administration (FDA) or global health departments. It is not intended to diagnose, treat, cure, or prevent any clinical digestive disorder or pathology, including but not limited to Irritable Bowel Syndrome (IBS), Small Intestinal Bacterial Overgrowth (SIBO), Crohn’s Disease, Ulcerative Colitis, or chronic gut inflammation.
+              </p>
+              <p>
+                <strong>3. AI Advisor Disclaimers:</strong> The "Deep AI Advisor Synthesis" employs automated generative large language models to estimate microbial balance and digestive responses. Artificial intelligence can make inaccurate predictions or exhibit hallucinations. Never disregard professional clinical diagnosis, alter your medication schedule, or delay seeking emergency medical treatment because of analysis read on this dashboard.
+              </p>
+              <p>
+                <strong>4. Assumption of Risk:</strong> Any dietary modifications, pre/probiotic usage, or physical lifestyle habits initiated on the basis of suggestions provided by this application are carried out entirely at your own discretion and individual liability. You are highly encouraged to consult a licensed dietitian or physician before changing your dietary structure.
+              </p>
+              <p>
+                <strong>5. Data Security:</strong> Your logged profiles and credentials are secure. Standard cloud transfers compress and pair devices without exposing emails or biological metrics publicly.
+              </p>
+            </div>
+
+            <button
+              type="button"
+              onClick={() => {
+                setAuthAgreed(true);
+                setShowDisclaimerModal(false);
+              }}
+              className="w-full bg-emerald-950 hover:bg-emerald-900 text-white text-xs font-bold py-3 rounded-xl transition shadow mt-5"
+            >
+              I Understand & Accept These Terms
+            </button>
+          </div>
+        </div>
+      )}
+
       {/* Main navigation selection headers */}
       <nav className="bg-white border-b border-slate-100 sticky top-18 z-30 shadow-sm/50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -1688,7 +1760,7 @@ Format the output cleanly in normal conversational paragraphs with distinct head
                 </button>
 
                 {aiReport ? (
-                  <div className="bg-slate-900 border border-slate-800 rounded-2xl p-4.5 space-y-4 max-h-110 overflow-y-auto text-[11px] leading-relaxed text-slate-300 font-medium">
+                  <div className="bg-slate-900 border border-slate-800 rounded-2xl p-4.5 space-y-4 max-h-110 overflow-y-auto text-[11px] leading-relaxed text-slate-300 font-medium font-sans">
                     {aiReport.split("\n\n").map((para, idx) => (
                       <p key={idx}>{para}</p>
                     ))}
@@ -1801,7 +1873,7 @@ Format the output cleanly in normal conversational paragraphs with distinct head
                 </div>
 
                 <div className="space-y-4">
-                  {/* Multimodal Camera/Upload RESTORED */}
+                  {/* Multimodal Camera/Upload */}
                   <div className="space-y-2">
                     <label className="block text-[10px] font-black uppercase text-slate-400">Meal Photo (Camera / Gallery)</label>
                     <div className="flex items-center gap-3">
@@ -2033,7 +2105,7 @@ Format the output cleanly in normal conversational paragraphs with distinct head
                           
                           <h4 className="text-xs font-black text-slate-900 leading-relaxed">{log.food}</h4>
 
-                          {/* Dynamic detailed macros scorecard Restored */}
+                          {/* Dynamic detailed macros scorecard */}
                           <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 border-y border-slate-100/80 py-2.5">
                             <div className="bg-slate-100 text-slate-700 text-[10px] p-1.5 rounded-lg font-semibold text-center">
                               🥑 Fats: <span className="font-bold">{log.fats || 0}g</span>
@@ -2529,6 +2601,8 @@ Format the output cleanly in normal conversational paragraphs with distinct head
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 flex flex-col sm:flex-row items-center justify-between gap-4 text-[11px] font-semibold text-slate-400">
           <p>© 2026 MyBiome AI. Curate your ecosystem, cultivate your health.</p>
           <div className="flex gap-4">
+            <button type="button" onClick={() => setShowDisclaimerModal(true)} className="hover:text-slate-900 transition underline">Medical Disclaimer</button>
+            <span className="text-slate-200">|</span>
             <a href="https://aistudio.google.com/" target="_blank" rel="noopener noreferrer" className="hover:text-slate-900 transition">Get Gemini Token</a>
             <span className="text-slate-200">|</span>
             <span className="text-emerald-700">Molecular Gut Sync Bridge v5</span>
