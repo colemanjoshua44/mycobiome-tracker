@@ -6,13 +6,13 @@ import tailwindcss from "@tailwindcss/vite";
 export default defineConfig({
   plugins: [react(), tailwindcss()],
   build: {
-    outDir: "build", // Force Vite to compile files into 'build' to perfectly match Vercel's expectations
-    target: "es2022",
+    outDir: "build", // Force Vite to compile files into 'build' to match Vercel's expectations
+    target: "es2022", // Explicitly target es2022 to enable modern features
   },
   esbuild: {
     target: "es2022",
     supported: {
-      "import-meta": true
+      "import-meta": true // Explicitly enable support for import.meta keys
     }
   }
 });
