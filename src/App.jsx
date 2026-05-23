@@ -4,6 +4,7 @@ import {
   BookOpen, 
   Calendar, 
   Check, 
+  ChevronLeft,
   ChevronRight, 
   Clock, 
   Database, 
@@ -28,7 +29,7 @@ import {
   KeyRound,
   Camera,
   UploadCloud,
-  ImageIcon
+  Image as ImageIcon
 } from "lucide-react";
 
 const BRISTOL_STOOL_CHART = [
@@ -53,7 +54,7 @@ const DEFAULT_LOGS = [
     prebiotics: "Beta-glucan, Mucilage", 
     probiotics: "None", 
     score: 95, 
-    timestamp: "2026-05-18T08:30:00.000Z" 
+    timestamp: new Date().toISOString()
   },
   { 
     id: "2", 
@@ -66,7 +67,7 @@ const DEFAULT_LOGS = [
     prebiotics: "Inulin, Resistant starch", 
     probiotics: "Lactobacillus, Leuconostoc", 
     score: 90, 
-    timestamp: "2026-05-18T13:15:00.000Z" 
+    timestamp: new Date().toISOString()
   },
   { 
     id: "3", 
@@ -79,7 +80,7 @@ const DEFAULT_LOGS = [
     prebiotics: "Inulin, FOS", 
     probiotics: "None", 
     score: 88, 
-    timestamp: "2026-05-18T19:00:00.000Z" 
+    timestamp: new Date(Date.now() - 86400000).toISOString()
   }
 ];
 
@@ -87,7 +88,7 @@ const MICROBES_INFO = [
   { name: "Bifidobacteria", category: "Good", desc: "Thrives on prebiotic starches and fibers (oats, onions, bananas). Key for producing anti-inflammatory acetate.", color: "#10b981" },
   { name: "Lactobacillus", category: "Good", desc: "Common in fermented foods (yogurt, kefir, sauerkraut). Produces lactic acid, maintaining an acidic barrier against pathogens.", color: "#3b82f6" },
   { name: "Akkermansia", category: "Good", desc: "Feeds on your natural mucus layer, encouraging gut lining regeneration. Boosted by polyphenols like green tea and berries.", color: "#6366f1" },
-  { name: "Sugar-Feeders", category: "Opportunistic", desc: "Thrive on ultra-processed sweets and refined flour. High populations can crowd out good microbes and trigger low-grade bloating.", color: "#f59e0b" }
+  { name: "Sugar-Feeders", category: "Opportunistic", desc: "Thrive on ultra-processed sweets and refined flour. High populations can crowd out good microbes and trigger bloating.", color: "#f59e0b" }
 ];
 
 const SECURITY_QUESTIONS = [
@@ -98,12 +99,27 @@ const SECURITY_QUESTIONS = [
   "What is your mother's maiden name?"
 ];
 
+const getLocalDateString = (dateObjOrIsoString) => {
+  const d = new Date(dateObjOrIsoString);
+  const year = d.getFullYear();
+  const month = String(d.getMonth() + 1).padStart(2, '0');
+  const day = String(d.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
+};
+
+const mergeDateWithCurrentTime = (dateStr) => {
+  const now = new Date();
+  const [year, month, day] = dateStr.split('-').map(Number);
+  const localDate = new Date(year, month - 1, day, now.getHours(), now.getMinutes(), now.getSeconds());
+  return localDate.toISOString();
+};
+
 export default function App() {
   const [currentUser, setCurrentUser] = useState(() => {
     const saved = localStorage.getItem('mybiome_current_user');
     return saved ? JSON.parse(saved) : null;
   });
-  const [authMode, setAuthMode] = useState('login'); // 'login', 'signup', 'forgot_password'
+  const [authMode, setAuthMode] = useState('login'); 
   const [authEmail, setAuthEmail] = useState('');
   const [authPassword, setAuthPassword] = useState('');
   const [authName, setAuthName] = useState('');
@@ -130,6 +146,8 @@ export default function App() {
 
   const [foodLogs, setFoodLogs] = useState(DEFAULT_LOGS);
   const [symptomLogs, setSymptomLogs] = useState([]);
+
+  const [selectedFoodDateStr, setSelectedFoodDateStr] = useState(() => getLocalDateString(new Date()));
 
   const [stoolTimestamp, setStoolTimestamp] = useState(() => new Date().toISOString().slice(0, 16));
   const [stoolNotes, setStoolNotes] = useState('');
@@ -502,7 +520,6 @@ export default function App() {
   const handleSubmitDashboardMetrics = () => {
     const autoTimestamp = new Date().toISOString();
     
-    // Water
     const waterLog = {
       id: 'qs-water-' + Date.now() + '-' + Math.random().toString(36).substr(2, 5),
       type: 'water',
@@ -511,7 +528,6 @@ export default function App() {
       notes: 'Submitted via Quick Stats Panel'
     };
     
-    // Bloating
     const bloatingLog = {
       id: 'qs-bloat-' + Date.now() + '-' + Math.random().toString(36).substr(2, 5),
       type: 'bloating',
@@ -520,7 +536,6 @@ export default function App() {
       notes: 'Submitted via Quick Stats Panel'
     };
     
-    // Stress
     const stressLog = {
       id: 'qs-stress-' + Date.now() + '-' + Math.random().toString(36).substr(2, 5),
       type: 'stress',
@@ -541,10 +556,12 @@ export default function App() {
     showNotification("Gemini API key successfully saved!");
   };
 
+  const activeDayFoodLogs = foodLogs.filter(log => getLocalDateString(log.timestamp) === selectedFoodDateStr);
+
   const calculateWellBeingScore = () => {
     let score = 75; 
 
-    const totalFiberLogged = foodLogs.reduce((acc, log) => acc + log.fiber, 0);
+    const totalFiberLogged = activeDayFoodLogs.reduce((acc, log) => acc + log.fiber, 0);
     score += Math.min(totalFiberLogged * 1.5, 15);
 
     if (stoolType === 3 || stoolType === 4) {
@@ -573,7 +590,7 @@ export default function App() {
     let animationFrameId;
 
     const calculateMicrobeSettings = () => {
-      const fiberScore = foodLogs.reduce((acc, log) => acc + log.fiber, 0);
+      const fiberScore = activeDayFoodLogs.reduce((acc, log) => acc + log.fiber, 0);
       const isPerfectStool = stoolType === 3 || stoolType === 4;
 
       const bifidoCount = Math.max(5, Math.min(25, 5 + fiberScore + (isPerfectStool ? 5 : 0)));
@@ -717,7 +734,7 @@ export default function App() {
       cancelAnimationFrame(animationFrameId);
       window.removeEventListener("resize", resizeCanvas);
     };
-  }, [foodLogs, stoolType, bloatingLevel, energyLevel, stressLevel, waterIntake, activeTab]);
+  }, [foodLogs, stoolType, bloatingLevel, energyLevel, stressLevel, waterIntake, activeTab, selectedFoodDateStr]);
 
   const handlePhotoSelect = (e) => {
     const file = e.target.files[0];
@@ -804,7 +821,7 @@ Do not return any conversational introductory text, only the raw JSON.`;
         prebiotics: parsed.prebiotics || "Unknown",
         probiotics: parsed.probiotics || "None",
         score: parseInt(parsed.score) || 60,
-        timestamp: new Date().toISOString()
+        timestamp: mergeDateWithCurrentTime(selectedFoodDateStr) 
       };
 
       setFoodLogs([newLog, ...foodLogs]);
@@ -825,7 +842,7 @@ Do not return any conversational introductory text, only the raw JSON.`;
         prebiotics: "Insoluble fiber",
         probiotics: "None",
         score: 65,
-        timestamp: new Date().toISOString()
+        timestamp: mergeDateWithCurrentTime(selectedFoodDateStr)
       };
       setFoodLogs([fallbackLog, ...foodLogs]);
       setFoodInput("");
@@ -846,14 +863,15 @@ Do not return any conversational introductory text, only the raw JSON.`;
 
     setIsAnalyzing(true);
     try {
-      const recentFoodsList = foodLogs.map(l => `${l.food} (Macros - C:${l.carbs}g, P:${l.protein}g, F:${l.fats}g, Fiber: ${l.fiber}g, Prebiotics: ${l.prebiotics})`).join(", ");
+      const recentFoodsList = activeDayFoodLogs.map(l => `${l.food} (Macros - C:${l.carbs}g, P:${l.protein}g, F:${l.fats}g, Fiber: ${l.fiber}g, Prebiotics: ${l.prebiotics})`).join(", ");
       
       const prompt = `You are the MyBiome Chief AI Microbiome Advisor. Synthesize an ultimate personalized gut flora report based on this bio-profile:
+- Selected Date Context: ${selectedFoodDateStr}
 - Stool Type: Bristol Stool Form Type ${stoolType}
 - Water Intake: ${waterIntake} Liters/day
 - Stress Level: ${stressLevel}/5
 - Bloating Rating: ${bloatingLevel}/5
-- Recent Meals Logged: [${recentFoodsList}]
+- Recent Meals Logged on this day: [${recentFoodsList}]
 - Sleep quality: ${sleepHours} hours
 
 Generate a structured feedback report containing:
@@ -886,6 +904,46 @@ Format the output cleanly in normal conversational paragraphs with distinct head
     }
   };
 
+  const handlePrevDay = () => {
+    const d = new Date(selectedFoodDateStr + 'T00:00:00');
+    d.setDate(d.getDate() - 1);
+    setSelectedFoodDateStr(getLocalDateString(d));
+  };
+
+  const handleNextDay = () => {
+    const d = new Date(selectedFoodDateStr + 'T00:00:00');
+    d.setDate(d.getDate() + 1);
+    setSelectedFoodDateStr(getLocalDateString(d));
+  };
+
+  const handleJumpToToday = () => {
+    setSelectedFoodDateStr(getLocalDateString(new Date()));
+  };
+
+  const getDayLabel = () => {
+    const todayStr = getLocalDateString(new Date());
+    const yesterday = new Date();
+    yesterday.setDate(yesterday.getDate() - 1);
+    const yesterdayStr = getLocalDateString(yesterday);
+
+    if (selectedFoodDateStr === todayStr) return "Today";
+    if (selectedFoodDateStr === yesterdayStr) return "Yesterday";
+
+    const dateOptions = { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric' };
+    return new Date(selectedFoodDateStr + 'T00:00:00').toLocaleDateString([], dateOptions);
+  };
+
+  const dailyTotals = activeDayFoodLogs.reduce((acc, log) => ({
+    fiber: acc.fiber + log.fiber,
+    fats: acc.fats + log.fats,
+    carbs: acc.carbs + log.carbs,
+    protein: acc.protein + log.protein,
+    scoreCount: acc.scoreCount + 1,
+    scoreSum: acc.scoreSum + log.score
+  }), { fiber: 0, fats: 0, carbs: 0, protein: 0, scoreCount: 0, scoreSum: 0 });
+
+  const averageDailyScore = dailyTotals.scoreCount > 0 ? Math.round(dailyTotals.scoreSum / dailyTotals.scoreCount) : 0;
+
   return (
     <div className="min-h-screen bg-slate-50 text-slate-800 font-sans antialiased">
       
@@ -896,6 +954,7 @@ Format the output cleanly in normal conversational paragraphs with distinct head
         </div>
       )}
 
+      {/* Primary header navbar navigation */}
       <header className="sticky top-0 bg-white/80 backdrop-blur-md border-b border-slate-100 z-40 transition-all duration-300">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-18 flex items-center justify-between">
           
@@ -973,7 +1032,7 @@ Format the output cleanly in normal conversational paragraphs with distinct head
 
             <div className="hidden md:flex items-center gap-2.5 bg-slate-950 text-white rounded-2xl p-2 px-3 border border-slate-800 shadow-md">
               <div className="text-right">
-                <p className="text-[9px] font-bold text-slate-400 uppercase tracking-wider leading-none">Gut Well-Being</p>
+                <p className="text-[9px] font-bold text-slate-400 uppercase tracking-wider leading-none">MyBiome Day Score</p>
                 <p className="text-xs font-bold text-slate-100 leading-none mt-1">Score Tracker</p>
               </div>
               <span className="text-sm font-black text-emerald-400 font-mono">
@@ -985,7 +1044,7 @@ Format the output cleanly in normal conversational paragraphs with distinct head
         </div>
       </header>
 
-      {}
+      {/* Authentication and multi-user profile login modals */}
       {showAuthModal && (
         <div className="fixed inset-0 bg-slate-950/40 backdrop-blur-sm flex items-center justify-center z-50 p-4">
           <div className="bg-white rounded-3xl p-6.5 max-w-md w-full border border-slate-100 shadow-2xl relative animate-fade-in">
@@ -1006,7 +1065,7 @@ Format the output cleanly in normal conversational paragraphs with distinct head
                   <div className="h-10 w-10 bg-emerald-50 text-emerald-800 rounded-2xl flex items-center justify-center mx-auto mb-3">
                     <Database className="h-5 w-5" />
                   </div>
-                  <h3 className="text-base font-extrabold text-slate-950">Access your Microbiome Profile</h3>
+                  <h3 className="text-base font-extrabold text-slate-950">Access your MyBiome Profile</h3>
                   <p className="text-xs text-slate-500 mt-1">
                     Sign in to access your logs, custom timeline records, and personalized AI advisor data.
                   </p>
@@ -1077,7 +1136,7 @@ Format the output cleanly in normal conversational paragraphs with distinct head
                   <div className="h-10 w-10 bg-emerald-50 text-emerald-800 rounded-2xl flex items-center justify-center mx-auto mb-3">
                     <Sparkles className="h-5 w-5" />
                   </div>
-                  <h3 className="text-base font-extrabold text-slate-950">Create Gut Account</h3>
+                  <h3 className="text-base font-extrabold text-slate-950">Create MyBiome Account</h3>
                   <p className="text-xs text-slate-500 mt-1">
                     Set up a secure profile with custom security backup recovery questions.
                   </p>
@@ -1274,7 +1333,7 @@ Format the output cleanly in normal conversational paragraphs with distinct head
         </div>
       )}
 
-      {}
+      {/* Cloud devices database synchronization modal dialog */}
       {showSyncModal && (
         <div className="fixed inset-0 bg-slate-950/40 backdrop-blur-sm flex items-center justify-center z-50 p-4">
           <div className="bg-white rounded-3xl p-6.5 max-w-lg w-full border border-slate-100 shadow-2xl relative max-h-[90vh] overflow-y-auto animate-fade-in">
@@ -1422,7 +1481,7 @@ Format the output cleanly in normal conversational paragraphs with distinct head
         </div>
       )}
 
-      {}
+      {/* Settings Panel for personal API keys */}
       {showSettings && (
         <div className="fixed inset-0 bg-slate-950/40 backdrop-blur-sm flex items-center justify-center z-50 p-4 animate-fade-in">
           <div className="bg-white rounded-3xl p-6.5 max-w-md w-full border border-slate-100 shadow-2xl relative">
@@ -1478,7 +1537,7 @@ Format the output cleanly in normal conversational paragraphs with distinct head
         </div>
       )}
 
-      {}
+      {/* Main navigation selection headers */}
       <nav className="bg-white border-b border-slate-100 sticky top-18 z-30 shadow-sm/50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-start space-x-1 py-2 overflow-x-auto scrollbar-none">
@@ -1533,7 +1592,7 @@ Format the output cleanly in normal conversational paragraphs with distinct head
 
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         
-        {}
+        {/* TAB 1: DASHBOARD VIEW */}
         {activeTab === "dashboard" && (
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
             
@@ -1545,7 +1604,7 @@ Format the output cleanly in normal conversational paragraphs with distinct head
                     <Smile className="h-5.5 w-5.5 text-emerald-700" /> Gut Flora Live Microbe Simulation
                   </h2>
                   <p className="text-[11px] text-slate-400 mt-1 leading-relaxed font-semibold">
-                    Interactive canvas visualizing how physical symptoms, logged meals, prebiotic fiber, stress triggers, and water dynamic populations actively live in your molecular gut.
+                    Interactive canvas visualizing how daily nutrition, logged prebiotics, and stressors actively coordinate populations inside your colon on <strong className="text-emerald-800">{getDayLabel()}</strong>.
                   </p>
                 </div>
 
@@ -1566,11 +1625,12 @@ Format the output cleanly in normal conversational paragraphs with distinct head
                 </div>
               </div>
 
+              {/* Dynamic quick vitals summaries */}
               <div className="grid grid-cols-2 sm:grid-cols-4 gap-4.5">
                 <div className="bg-white p-5 rounded-2xl border border-slate-100 shadow-sm text-center">
                   <h4 className="text-[9px] font-bold text-slate-400 uppercase tracking-widest leading-none">Dietary Fiber</h4>
                   <p className="text-xl font-black text-slate-950 font-mono mt-2.5">
-                    {foodLogs.reduce((acc, log) => acc + log.fiber, 0)}g
+                    {dailyTotals.fiber}g
                   </p>
                   <p className="text-[9px] text-slate-500 font-semibold mt-1">Goal: 30g+ daily</p>
                 </div>
@@ -1581,7 +1641,7 @@ Format the output cleanly in normal conversational paragraphs with distinct head
                     Type {stoolType}
                   </p>
                   <p className="text-[9px] text-slate-500 font-semibold mt-1 uppercase">
-                    {stoolType === 4 || stoolType === 3 ? "Excellent" : "Constipation/Diarrhea"}
+                    {stoolType === 4 || stoolType === 3 ? "Excellent" : "Imbalanced"}
                   </p>
                 </div>
 
@@ -1591,12 +1651,12 @@ Format the output cleanly in normal conversational paragraphs with distinct head
                     {stressLevel}/5
                   </p>
                   <p className="text-[9px] text-slate-500 font-semibold mt-1 uppercase">
-                    {stressLevel >= 4 ? "Cortisol Active" : "Parasympathetic"}
+                    {stressLevel >= 4 ? "Cortisol Active" : "Sympathetic"}
                   </p>
                 </div>
 
                 <div className="bg-white p-5 rounded-2xl border border-slate-100 shadow-sm text-center">
-                  <h4 className="text-[9px] font-bold text-slate-400 uppercase tracking-widest leading-none">Hydration Levels</h4>
+                  <h4 className="text-[9px] font-bold text-slate-400 uppercase tracking-widest leading-none">Hydration</h4>
                   <p className="text-xl font-black text-slate-950 font-mono mt-2.5">
                     {waterIntake}L
                   </p>
@@ -1628,7 +1688,7 @@ Format the output cleanly in normal conversational paragraphs with distinct head
                 </button>
 
                 {aiReport ? (
-                  <div className="bg-slate-900 border border-slate-800 rounded-2xl p-4.5 space-y-4 max-h-110 overflow-y-auto text-[11px] leading-relaxed text-slate-300">
+                  <div className="bg-slate-900 border border-slate-800 rounded-2xl p-4.5 space-y-4 max-h-110 overflow-y-auto text-[11px] leading-relaxed text-slate-300 font-medium">
                     {aiReport.split("\n\n").map((para, idx) => (
                       <p key={idx}>{para}</p>
                     ))}
@@ -1640,7 +1700,7 @@ Format the output cleanly in normal conversational paragraphs with distinct head
                 )}
               </div>
 
-              {}
+              {/* Quick stats compiling section with automatic timestamp submit options */}
               <div className="bg-white rounded-3xl p-6 border border-slate-100 shadow-sm space-y-4">
                 <h3 className="text-xs font-black text-slate-950 uppercase tracking-widest leading-none flex items-center gap-1.5">
                   <Calendar className="h-4.5 w-4.5 text-emerald-800" /> Quick Stats Tracking
@@ -1713,10 +1773,11 @@ Format the output cleanly in normal conversational paragraphs with distinct head
           </div>
         )}
 
-        {}
+        {/* TAB 2: MOLECULAR FOOD LOG */}
         {activeTab === "food" && (
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 animate-fade-in">
             
+            {/* Left Column: AI Food Parser Form */}
             <div className="space-y-6">
               <div className="bg-white rounded-3xl p-6 border border-slate-100 shadow-sm space-y-6">
                 <div>
@@ -1728,8 +1789,19 @@ Format the output cleanly in normal conversational paragraphs with distinct head
                   </p>
                 </div>
 
+                <div className="p-3 bg-emerald-50 rounded-xl border border-emerald-100 flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <Calendar className="h-4 w-4 text-emerald-800" />
+                    <div>
+                      <span className="text-[9px] uppercase tracking-wide font-black text-emerald-800 block">Target Log Day</span>
+                      <span className="text-xs font-bold text-slate-900">{getDayLabel()}</span>
+                    </div>
+                  </div>
+                  <span className="text-[10px] bg-emerald-100 text-emerald-800 px-2 py-0.5 rounded-md font-bold">Backlogging</span>
+                </div>
+
                 <div className="space-y-4">
-                  {/* Camera / Photo Upload section */}
+                  {/* Multimodal Camera/Upload RESTORED */}
                   <div className="space-y-2">
                     <label className="block text-[10px] font-black uppercase text-slate-400">Meal Photo (Camera / Gallery)</label>
                     <div className="flex items-center gap-3">
@@ -1814,38 +1886,120 @@ Format the output cleanly in normal conversational paragraphs with distinct head
               </div>
             </div>
 
-            {}
+            {/* Right Column (2/3 width): Calendar Selector & History Log lists */}
             <div className="lg:col-span-2 space-y-6">
-              <div className="bg-white rounded-3xl p-6 border border-slate-100 shadow-sm">
-                <div className="flex justify-between items-center mb-6 pb-4 border-b border-slate-100">
+              
+              {/* Dynamic Calendar Date Selection Banner */}
+              <div className="bg-white rounded-3xl p-6 border border-slate-100 shadow-sm space-y-4">
+                <div className="flex items-center justify-between gap-4 flex-wrap">
                   <div>
                     <h3 className="text-sm font-black text-slate-950 uppercase tracking-wider flex items-center gap-1.5">
-                      <Clock className="h-5 w-5 text-emerald-700" /> Molecular Food History
+                      <Calendar className="h-5 w-5 text-emerald-700" /> Nutrition Calendar
                     </h3>
-                    <p className="text-xs text-slate-400 font-semibold">Timeline of logged prebiotics, fibers, and probiotics</p>
+                    <p className="text-xs text-slate-400 font-semibold">Flip through dates to view what you ate</p>
                   </div>
-                  {foodLogs.length > 0 && (
+
+                  {selectedFoodDateStr !== getLocalDateString(new Date()) && (
                     <button
-                      onClick={() => {
-                        setFoodLogs([]);
-                        showNotification("Timeline logs cleared!");
-                      }}
-                      className="text-xs text-red-500 hover:underline flex items-center gap-1 font-semibold"
+                      onClick={handleJumpToToday}
+                      className="text-[11px] font-bold text-emerald-700 bg-emerald-50 border border-emerald-100 px-3 py-1.5 rounded-xl hover:bg-emerald-100 transition shadow-sm"
                     >
-                      <RotateCcw className="h-3.5 w-3.5" /> Clear History
+                      Jump to Today
                     </button>
                   )}
                 </div>
 
-                {foodLogs.length === 0 ? (
+                {/* Calendar Flipper Controls */}
+                <div className="flex items-center justify-between border border-slate-100 bg-slate-50/50 p-2.5 rounded-2xl max-w-md mx-auto">
+                  <button
+                    onClick={handlePrevDay}
+                    className="p-2 bg-white border border-slate-200 text-slate-700 hover:bg-slate-50 active:bg-slate-100 rounded-xl transition shadow-sm"
+                    title="Previous Day"
+                  >
+                    <ChevronLeft className="h-4 w-4" />
+                  </button>
+
+                  <label className="flex items-center gap-2 cursor-pointer hover:bg-slate-100/50 px-4 py-2 rounded-xl transition relative">
+                    <Calendar className="h-4 w-4 text-slate-500" />
+                    <span className="text-xs font-black text-slate-900 tracking-wide font-sans">{getDayLabel()}</span>
+                    <input
+                      type="date"
+                      value={selectedFoodDateStr}
+                      onChange={(e) => {
+                        if (e.target.value) setSelectedFoodDateStr(e.target.value);
+                      }}
+                      className="absolute inset-0 opacity-0 w-full h-full cursor-pointer"
+                    />
+                  </label>
+
+                  <button
+                    onClick={handleNextDay}
+                    className="p-2 bg-white border border-slate-200 text-slate-700 hover:bg-slate-50 active:bg-slate-100 rounded-xl transition shadow-sm"
+                    title="Next Day"
+                  >
+                    <ChevronRight className="h-4 w-4" />
+                  </button>
+                </div>
+
+                {/* Daily Macros Scorecard */}
+                <div className="grid grid-cols-2 sm:grid-cols-5 gap-2 pt-3 border-t border-slate-100">
+                  <div className="bg-slate-50 p-2 rounded-xl border border-slate-100 text-center">
+                    <span className="text-[8px] font-bold text-slate-400 uppercase tracking-wider block">Day Fiber</span>
+                    <span className="text-sm font-black text-slate-900 font-mono mt-0.5 block">{dailyTotals.fiber}g</span>
+                  </div>
+                  <div className="bg-slate-50 p-2 rounded-xl border border-slate-100 text-center">
+                    <span className="text-[8px] font-bold text-slate-400 uppercase tracking-wider block">Day Fats</span>
+                    <span className="text-sm font-black text-slate-900 font-mono mt-0.5 block">{dailyTotals.fats}g</span>
+                  </div>
+                  <div className="bg-slate-50 p-2 rounded-xl border border-slate-100 text-center">
+                    <span className="text-[8px] font-bold text-slate-400 uppercase tracking-wider block">Day Carbs</span>
+                    <span className="text-sm font-black text-slate-900 font-mono mt-0.5 block">{dailyTotals.carbs}g</span>
+                  </div>
+                  <div className="bg-slate-50 p-2 rounded-xl border border-slate-100 text-center">
+                    <span className="text-[8px] font-bold text-slate-400 uppercase tracking-wider block">Day Protein</span>
+                    <span className="text-sm font-black text-slate-900 font-mono mt-0.5 block">{dailyTotals.protein}g</span>
+                  </div>
+                  <div className="bg-slate-50 p-2 rounded-xl border border-slate-100 text-center col-span-2 sm:col-span-1">
+                    <span className="text-[8px] font-bold text-slate-400 uppercase tracking-wider block">Day Score</span>
+                    <span className="text-sm font-black text-emerald-700 font-mono mt-0.5 block">
+                      {averageDailyScore > 0 ? `${averageDailyScore}/100` : "0"}
+                    </span>
+                  </div>
+                </div>
+              </div>
+
+              {/* History logs filter for currently active calendar selection */}
+              <div className="bg-white rounded-3xl p-6 border border-slate-100 shadow-sm">
+                <div className="flex justify-between items-center mb-6 pb-4 border-b border-slate-100">
+                  <div>
+                    <h3 className="text-sm font-black text-slate-950 uppercase tracking-wider flex items-center gap-1.5">
+                      <Clock className="h-5 w-5 text-emerald-700" /> Food logs for {getDayLabel()}
+                    </h3>
+                    <p className="text-xs text-slate-400 font-semibold">Active meals recorded on this calendar day</p>
+                  </div>
+                  {activeDayFoodLogs.length > 0 && (
+                    <button
+                      onClick={() => {
+                        const otherDays = foodLogs.filter(log => getLocalDateString(log.timestamp) !== selectedFoodDateStr);
+                        setFoodLogs(otherDays);
+                        showNotification(`Logs cleared for ${selectedFoodDateStr}!`);
+                      }}
+                      className="text-xs text-red-500 hover:underline flex items-center gap-1 font-semibold"
+                    >
+                      <RotateCcw className="h-3.5 w-3.5" /> Clear Day Logs
+                    </button>
+                  )}
+                </div>
+
+                {activeDayFoodLogs.length === 0 ? (
                   <div className="text-center py-16">
                     <Layers className="h-12 w-12 text-slate-300 mx-auto mb-3" />
-                    <h4 className="text-xs font-black text-slate-700 uppercase tracking-widest">No Food Items Logged</h4>
-                    <p className="text-xs text-slate-400 mt-1">Submit meal parameters using our AI Parser column to populate your profile.</p>
+                    <h4 className="text-xs font-black text-slate-700 uppercase tracking-widest">No Food Items on this Day</h4>
+                    <p className="text-xs text-slate-400 mt-1">Submit meal parameters using our AI Parser column to populate your profile for this day.</p>
                   </div>
                 ) : (
                   <div className="space-y-4">
-                    {foodLogs.map((log) => (
+                    {activeDayFoodLogs.map((log) => (
                       <div key={log.id} className="p-4.5 rounded-2xl bg-slate-50/50 border border-slate-100 flex items-start justify-between gap-4 flex-col">
                         <div className="space-y-2.5 w-full">
                           
@@ -1855,7 +2009,7 @@ Format the output cleanly in normal conversational paragraphs with distinct head
                                 Fiber: {log.fiber}g
                               </span>
                               <span className="text-[10px] text-slate-400 font-semibold">
-                                {new Date(log.timestamp).toLocaleDateString([], { weekday: 'short', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}
+                                {new Date(log.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                               </span>
                             </div>
                             
@@ -1879,6 +2033,7 @@ Format the output cleanly in normal conversational paragraphs with distinct head
                           
                           <h4 className="text-xs font-black text-slate-900 leading-relaxed">{log.food}</h4>
 
+                          {/* Dynamic detailed macros scorecard Restored */}
                           <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 border-y border-slate-100/80 py-2.5">
                             <div className="bg-slate-100 text-slate-700 text-[10px] p-1.5 rounded-lg font-semibold text-center">
                               🥑 Fats: <span className="font-bold">{log.fats || 0}g</span>
@@ -1914,10 +2069,11 @@ Format the output cleanly in normal conversational paragraphs with distinct head
           </div>
         )}
 
-        {}
+        {/* TAB 3: PHYSICAL SYMPTOMS LOG */}
         {activeTab === 'symptoms' && (
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
             
+            {/* Bristol Stool Chart Selector (2/3 width) */}
             <div className="lg:col-span-2 space-y-6">
               <div className="bg-white rounded-3xl p-6 border border-slate-100 shadow-sm">
                 <div>
@@ -1971,6 +2127,7 @@ Format the output cleanly in normal conversational paragraphs with distinct head
                   ))}
                 </div>
 
+                {/* Submit Stool Log Form */}
                 <div className="mt-6 p-4 bg-slate-50 rounded-2xl border border-slate-100 space-y-4">
                   <h4 className="text-xs font-black uppercase text-slate-600 tracking-wider flex items-center gap-1.5">
                     <Clock className="h-4 w-4 text-emerald-600" /> Stool Log Details
@@ -2007,7 +2164,7 @@ Format the output cleanly in normal conversational paragraphs with distinct head
               </div>
             </div>
 
-            {}
+            {/* Other Symptoms Column (1/3 width) */}
             <div className="space-y-6">
               
               <div className="bg-white rounded-3xl p-6 border border-slate-100 shadow-sm space-y-6">
@@ -2016,6 +2173,7 @@ Format the output cleanly in normal conversational paragraphs with distinct head
                   <p className="text-xs text-slate-500">Track physical cues for AI correlation as often as you wish with custom timestamps.</p>
                 </div>
 
+                {/* Bloating Slider */}
                 <div className="p-4 bg-slate-50/50 rounded-2xl border border-slate-100 space-y-3">
                   <div className="flex justify-between items-center">
                     <label className="text-xs font-extrabold text-slate-700">Bloating/Distension</label>
@@ -2061,6 +2219,7 @@ Format the output cleanly in normal conversational paragraphs with distinct head
                   </button>
                 </div>
 
+                {/* Energy Slider */}
                 <div className="p-4 bg-slate-50/50 rounded-2xl border border-slate-100 space-y-3">
                   <div className="flex justify-between items-center">
                     <label className="text-xs font-extrabold text-slate-700">Energy & Vitality</label>
@@ -2106,6 +2265,7 @@ Format the output cleanly in normal conversational paragraphs with distinct head
                   </button>
                 </div>
 
+                {/* Sleep Slider */}
                 <div className="p-4 bg-slate-50/50 rounded-2xl border border-slate-100 space-y-3">
                   <div className="flex justify-between items-center">
                     <label className="text-xs font-extrabold text-slate-700">Sleep Quality</label>
@@ -2152,6 +2312,7 @@ Format the output cleanly in normal conversational paragraphs with distinct head
                   </button>
                 </div>
 
+                {/* Stress Slider */}
                 <div className="p-4 bg-slate-50/50 rounded-2xl border border-slate-100 space-y-3">
                   <div className="flex justify-between items-center">
                     <label className="text-xs font-extrabold text-slate-700 flex items-center gap-1.5">
@@ -2207,6 +2368,7 @@ Format the output cleanly in normal conversational paragraphs with distinct head
 
             </div>
 
+            {/* Bottom Full-Width Section: Historical Symptom Timeline Logs */}
             <div className="lg:col-span-3 bg-white rounded-3xl p-6 border border-slate-100 shadow-sm">
               <div className="flex items-center justify-between mb-4 border-b border-slate-100 pb-3">
                 <div>
@@ -2293,7 +2455,7 @@ Format the output cleanly in normal conversational paragraphs with distinct head
           </div>
         )}
 
-        {}
+        {/* TAB 4: EDUCATION VIEW */}
         {activeTab === "education" && (
           <div className="space-y-8 animate-fade-in">
             
@@ -2363,7 +2525,6 @@ Format the output cleanly in normal conversational paragraphs with distinct head
 
       </main>
 
-      {}
       <footer className="bg-white border-t border-slate-100 mt-20">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 flex flex-col sm:flex-row items-center justify-between gap-4 text-[11px] font-semibold text-slate-400">
           <p>© 2026 MyBiome AI. Curate your ecosystem, cultivate your health.</p>
