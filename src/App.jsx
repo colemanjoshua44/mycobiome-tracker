@@ -25,9 +25,11 @@ import {
   Smartphone,
   RefreshCw,
   Copy,
-  KeyRound
+  KeyRound,
+  Camera,
+  UploadCloud,
+  ImageIcon
 } from "lucide-react";
-
 
 const BRISTOL_STOOL_CHART = [
   { type: 1, name: "Separate Hard Lumps", rating: "severe constipation", desc: "Hard, separate lumps resembling nuts; difficult to pass. Suggests slow transit and low hydration.", color: "text-red-600 bg-red-50 border-red-200" },
@@ -96,10 +98,9 @@ const SECURITY_QUESTIONS = [
   "What is your mother's maiden name?"
 ];
 
-
 export default function App() {
   const [currentUser, setCurrentUser] = useState(() => {
-    const saved = localStorage.getItem('mycobiome_current_user');
+    const saved = localStorage.getItem('mybiome_current_user');
     return saved ? JSON.parse(saved) : null;
   });
   const [authMode, setAuthMode] = useState('login'); // 'login', 'signup', 'forgot_password'
@@ -114,7 +115,7 @@ export default function App() {
   const [recoveryAnswerAttempt, setRecoveryAnswerAttempt] = useState('');
   const [recoveryEmail, setRecoveryEmail] = useState('');
   const [newPassword, setNewPassword] = useState('');
-  const [recoveryStep, setRecoveryStep] = useState(1); // 1: enter email, 2: answer question
+  const [recoveryStep, setRecoveryStep] = useState(1); 
 
   const [showSyncModal, setShowSyncModal] = useState(false);
   const [syncPinCode, setSyncPinCode] = useState('');
@@ -123,8 +124,8 @@ export default function App() {
   const [manualImportString, setManualImportString] = useState('');
   const [isSyncing, setIsSyncing] = useState(false);
 
-  const [activeTab, setActiveTab] = useState("dashboard"); // dashboard, food, symptoms, education
-  const [customApiKey, setCustomApiKey] = useState(() => localStorage.getItem("mycobiome_api_key") || "");
+  const [activeTab, setActiveTab] = useState("dashboard"); 
+  const [customApiKey, setCustomApiKey] = useState(() => localStorage.getItem("mybiome_api_key") || "");
   const [showSettings, setShowSettings] = useState(false);
 
   const [foodLogs, setFoodLogs] = useState(DEFAULT_LOGS);
@@ -154,6 +155,7 @@ export default function App() {
   const [aiReport, setAiReport] = useState(null);
 
   const [foodInput, setFoodInput] = useState('');
+  const [selectedPhoto, setSelectedPhoto] = useState(null); 
   const [isAnalyzing, setIsAnalyzing] = useState(false);
 
   const canvasRef = useRef(null);
@@ -164,9 +166,8 @@ export default function App() {
     setTimeout(() => setToastMessage(null), 3500);
   };
 
-
   const getDatabase = () => {
-    const db = localStorage.getItem('mycobiome_user_database');
+    const db = localStorage.getItem('mybiome_user_database');
     return db ? JSON.parse(db) : {};
   };
 
@@ -186,7 +187,7 @@ export default function App() {
           stressLevel,
           aiReport
         };
-        localStorage.setItem('mycobiome_user_database', JSON.stringify(db));
+        localStorage.setItem('mybiome_user_database', JSON.stringify(db));
       }
     }
   }, [currentUser, foodLogs, symptomLogs, waterIntake, bloatingLevel, energyLevel, stoolType, sleepHours, stressLevel, aiReport]);
@@ -244,11 +245,11 @@ export default function App() {
       stressLevel: 2,
       aiReport: null
     };
-    localStorage.setItem('mycobiome_user_database', JSON.stringify(db));
+    localStorage.setItem('mybiome_user_database', JSON.stringify(db));
     
     const userObj = { email: authEmail, name: authName };
     setCurrentUser(userObj);
-    localStorage.setItem('mycobiome_current_user', JSON.stringify(userObj));
+    localStorage.setItem('mybiome_current_user', JSON.stringify(userObj));
     loadUserData(authEmail);
     setShowAuthModal(false);
     clearAuthFields();
@@ -270,7 +271,7 @@ export default function App() {
 
     const userObj = { email: authEmail, name: userRecord.name };
     setCurrentUser(userObj);
-    localStorage.setItem('mycobiome_current_user', JSON.stringify(userObj));
+    localStorage.setItem('mybiome_current_user', JSON.stringify(userObj));
     loadUserData(authEmail);
     setShowAuthModal(false);
     clearAuthFields();
@@ -279,7 +280,7 @@ export default function App() {
 
   const handleLogout = () => {
     setCurrentUser(null);
-    localStorage.removeItem('mycobiome_current_user');
+    localStorage.removeItem('mybiome_current_user');
     setFoodLogs(DEFAULT_LOGS);
     setSymptomLogs([]);
     setWaterIntake(4);
@@ -345,12 +346,11 @@ export default function App() {
       ...record,
       password: newPassword
     };
-    localStorage.setItem('mycobiome_user_database', JSON.stringify(db));
+    localStorage.setItem('mybiome_user_database', JSON.stringify(db));
     showNotification('Password successfully reset! Please sign in with your new password.');
     setAuthMode('login');
     clearAuthFields();
   };
-
 
   const handleGenerateCloudSync = async () => {
     setIsSyncing(true);
@@ -409,7 +409,7 @@ export default function App() {
 
       const localDb = getDatabase();
       const mergedDb = { ...localDb, ...importedDb };
-      localStorage.setItem('mycobiome_user_database', JSON.stringify(mergedDb));
+      localStorage.setItem('mybiome_user_database', JSON.stringify(mergedDb));
 
       showNotification('Success! All accounts successfully imported & synced!');
       setSyncCodeToRetrieve('');
@@ -437,7 +437,7 @@ export default function App() {
       
       const localDb = getDatabase();
       const mergedDb = { ...localDb, ...parsedDb };
-      localStorage.setItem('mycobiome_user_database', JSON.stringify(mergedDb));
+      localStorage.setItem('mybiome_user_database', JSON.stringify(mergedDb));
 
       showNotification('Success! Profiles imported manually successfully!');
       setManualImportString('');
@@ -451,7 +451,6 @@ export default function App() {
       showNotification('Invalid backup code. Please ensure you copied the entire string correctly.');
     }
   };
-
 
   const handleAddSymptomLog = (type, value, timestamp, notes, clearNotesFn) => {
     const newLog = {
@@ -500,9 +499,44 @@ export default function App() {
     });
   };
 
+  const handleSubmitDashboardMetrics = () => {
+    const autoTimestamp = new Date().toISOString();
+    
+    // Water
+    const waterLog = {
+      id: 'qs-water-' + Date.now() + '-' + Math.random().toString(36).substr(2, 5),
+      type: 'water',
+      value: waterIntake,
+      timestamp: autoTimestamp,
+      notes: 'Submitted via Quick Stats Panel'
+    };
+    
+    // Bloating
+    const bloatingLog = {
+      id: 'qs-bloat-' + Date.now() + '-' + Math.random().toString(36).substr(2, 5),
+      type: 'bloating',
+      value: bloatingLevel,
+      timestamp: autoTimestamp,
+      notes: 'Submitted via Quick Stats Panel'
+    };
+    
+    // Stress
+    const stressLog = {
+      id: 'qs-stress-' + Date.now() + '-' + Math.random().toString(36).substr(2, 5),
+      type: 'stress',
+      value: stressLevel,
+      timestamp: autoTimestamp,
+      notes: 'Submitted via Quick Stats Panel'
+    };
+
+    const updatedLogs = [waterLog, bloatingLog, stressLog, ...symptomLogs];
+    setSymptomLogs(updatedLogs);
+    showNotification('Dashboard metrics compiled & synchronized with timeline logs!');
+  };
+
   const saveApiKey = (e) => {
     e.preventDefault();
-    localStorage.setItem("mycobiome_api_key", customApiKey);
+    localStorage.setItem("mybiome_api_key", customApiKey);
     setShowSettings(false);
     showNotification("Gemini API key successfully saved!");
   };
@@ -530,7 +564,6 @@ export default function App() {
   };
 
   const scoreValue = calculateWellBeingScore();
-
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -686,10 +719,26 @@ export default function App() {
     };
   }, [foodLogs, stoolType, bloatingLevel, energyLevel, stressLevel, waterIntake, activeTab]);
 
+  const handlePhotoSelect = (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      const base64String = reader.result.split(',')[1];
+      setSelectedPhoto({
+        base64: base64String,
+        mimeType: file.type,
+        previewUrl: URL.createObjectURL(file)
+      });
+      showNotification("Photo ready for molecular analysis!");
+    };
+    reader.readAsDataURL(file);
+  };
 
   const handleAnalyzeFood = async () => {
-    if (!foodInput.trim()) {
-      showNotification("Please enter food details or notes to analyze!");
+    if (!foodInput.trim() && !selectedPhoto) {
+      showNotification("Please enter food details or select/take a photo to analyze!");
       return;
     }
 
@@ -703,8 +752,8 @@ export default function App() {
 
     setIsAnalyzing(true);
     try {
-      const prompt = `You are a molecular gut microbiome specialist and clinical nutritionist. 
-Analyze this custom food logging description: "${foodInput}". 
+      const textPrompt = `You are a molecular gut microbiome specialist and clinical nutritionist. 
+Analyze this custom food logging description${selectedPhoto ? " and the attached food photo" : ""}: "${foodInput || "No description provided, analyze from the photo directly."}". 
 Provide a strictly formatted JSON output containing:
 {
   "foodName": "Short descriptive simplified name of food logged",
@@ -719,12 +768,22 @@ Provide a strictly formatted JSON output containing:
 }
 Do not return any conversational introductory text, only the raw JSON.`;
 
+      const parts = [{ text: textPrompt }];
+      if (selectedPhoto) {
+        parts.push({
+          inlineData: {
+            mimeType: selectedPhoto.mimeType,
+            data: selectedPhoto.base64
+          }
+        });
+      }
+
       const response = await fetch(
-        `https://generativelink.googleapis.com/v1beta/models/gemini-pro:generateContent?key=${activeKey}`,
+        `https://generativelink.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${activeKey}`,
         {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ contents: [{ parts: [{ text: prompt }] }] })
+          body: JSON.stringify({ contents: [{ parts }] })
         }
       );
 
@@ -736,7 +795,7 @@ Do not return any conversational introductory text, only the raw JSON.`;
 
       const newLog = {
         id: Date.now().toString(),
-        food: parsed.foodName || foodInput,
+        food: parsed.foodName || foodInput || "Analyzed Photo Plate",
         fats: parseInt(parsed.fats) || 4,
         carbs: parseInt(parsed.carbs) || 12,
         protein: parseInt(parsed.protein) || 6,
@@ -750,13 +809,14 @@ Do not return any conversational introductory text, only the raw JSON.`;
 
       setFoodLogs([newLog, ...foodLogs]);
       setFoodInput("");
+      setSelectedPhoto(null);
       showNotification("Food successfully analyzed & added to microbiome timeline!");
     } catch (err) {
       console.error(err);
       showNotification("Error parsing food with Gemini. Added entry manually as default.");
       const fallbackLog = {
         id: Date.now().toString(),
-        food: foodInput,
+        food: foodInput || "Manual Meal Upload",
         fats: 5,
         carbs: 15,
         protein: 5,
@@ -769,6 +829,7 @@ Do not return any conversational introductory text, only the raw JSON.`;
       };
       setFoodLogs([fallbackLog, ...foodLogs]);
       setFoodInput("");
+      setSelectedPhoto(null);
     } finally {
       setIsAnalyzing(false);
     }
@@ -787,7 +848,7 @@ Do not return any conversational introductory text, only the raw JSON.`;
     try {
       const recentFoodsList = foodLogs.map(l => `${l.food} (Macros - C:${l.carbs}g, P:${l.protein}g, F:${l.fats}g, Fiber: ${l.fiber}g, Prebiotics: ${l.prebiotics})`).join(", ");
       
-      const prompt = `You are the MycoBiome Chief AI Microbiome Advisor. Synthesize an ultimate personalized gut flora report based on this bio-profile:
+      const prompt = `You are the MyBiome Chief AI Microbiome Advisor. Synthesize an ultimate personalized gut flora report based on this bio-profile:
 - Stool Type: Bristol Stool Form Type ${stoolType}
 - Water Intake: ${waterIntake} Liters/day
 - Stress Level: ${stressLevel}/5
@@ -816,7 +877,7 @@ Format the output cleanly in normal conversational paragraphs with distinct head
       const data = await response.json();
       const outputText = data.candidates?.[0]?.content?.parts?.[0]?.text || "Unable to retrieve advisor data at this time.";
       setAiReport(outputText);
-      showNotification("New Gut Advisor Analysis synthesized successfully!");
+      showNotification("New MyBiome Advisor Analysis synthesized successfully!");
     } catch (err) {
       console.error(err);
       setAiReport("Unable to synthesize AI report. Check your Gemini API Key parameters or network connection.");
@@ -824,7 +885,6 @@ Format the output cleanly in normal conversational paragraphs with distinct head
       setIsAnalyzing(false);
     }
   };
-
 
   return (
     <div className="min-h-screen bg-slate-50 text-slate-800 font-sans antialiased">
@@ -845,7 +905,7 @@ Format the output cleanly in normal conversational paragraphs with distinct head
             </div>
             <div>
               <h1 className="text-sm font-black text-slate-950 uppercase tracking-widest leading-none flex items-center gap-1.5">
-                MycoBiome <span className="text-[10px] bg-emerald-50 text-emerald-800 px-1.5 py-0.5 rounded-md font-bold uppercase tracking-normal">AI v5</span>
+                MyBiome <span className="text-[10px] bg-emerald-50 text-emerald-800 px-1.5 py-0.5 rounded-md font-bold uppercase tracking-normal">AI v5</span>
               </h1>
               <p className="text-[10px] text-slate-400 font-semibold mt-0.5">Molecular Gut Ecology & Sync Bridge</p>
             </div>
@@ -925,7 +985,7 @@ Format the output cleanly in normal conversational paragraphs with distinct head
         </div>
       </header>
 
-
+      {}
       {showAuthModal && (
         <div className="fixed inset-0 bg-slate-950/40 backdrop-blur-sm flex items-center justify-center z-50 p-4">
           <div className="bg-white rounded-3xl p-6.5 max-w-md w-full border border-slate-100 shadow-2xl relative animate-fade-in">
@@ -1214,6 +1274,7 @@ Format the output cleanly in normal conversational paragraphs with distinct head
         </div>
       )}
 
+      {}
       {showSyncModal && (
         <div className="fixed inset-0 bg-slate-950/40 backdrop-blur-sm flex items-center justify-center z-50 p-4">
           <div className="bg-white rounded-3xl p-6.5 max-w-lg w-full border border-slate-100 shadow-2xl relative max-h-[90vh] overflow-y-auto animate-fade-in">
@@ -1361,6 +1422,7 @@ Format the output cleanly in normal conversational paragraphs with distinct head
         </div>
       )}
 
+      {}
       {showSettings && (
         <div className="fixed inset-0 bg-slate-950/40 backdrop-blur-sm flex items-center justify-center z-50 p-4 animate-fade-in">
           <div className="bg-white rounded-3xl p-6.5 max-w-md w-full border border-slate-100 shadow-2xl relative">
@@ -1416,7 +1478,7 @@ Format the output cleanly in normal conversational paragraphs with distinct head
         </div>
       )}
 
-
+      {}
       <nav className="bg-white border-b border-slate-100 sticky top-18 z-30 shadow-sm/50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-start space-x-1 py-2 overflow-x-auto scrollbar-none">
@@ -1429,7 +1491,7 @@ Format the output cleanly in normal conversational paragraphs with distinct head
                   : "text-slate-500 hover:bg-slate-50 hover:text-slate-900"
               }`}
             >
-              <Activity className="h-4 w-4" /> Gut Dashboard
+              <Activity className="h-4 w-4" /> MyBiome Dashboard
             </button>
 
             <button
@@ -1471,6 +1533,7 @@ Format the output cleanly in normal conversational paragraphs with distinct head
 
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         
+        {}
         {activeTab === "dashboard" && (
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
             
@@ -1577,15 +1640,16 @@ Format the output cleanly in normal conversational paragraphs with distinct head
                 )}
               </div>
 
+              {}
               <div className="bg-white rounded-3xl p-6 border border-slate-100 shadow-sm space-y-4">
                 <h3 className="text-xs font-black text-slate-950 uppercase tracking-widest leading-none flex items-center gap-1.5">
                   <Calendar className="h-4.5 w-4.5 text-emerald-800" /> Quick Stats Tracking
                 </h3>
                 <p className="text-[10px] text-slate-400 leading-relaxed font-semibold">
-                  Update fast indicators here to sync with the interactive canvas instantly. Or go to "Physical Symptoms" for chronological timestamped logs.
+                  Update fast indicators here to sync with the interactive canvas instantly. Hit "Submit Dashboard Metrics" to instantly log these with an automatic current timestamp into your symptom timeline.
                 </p>
 
-                <div className="space-y-3 pt-2">
+                <div className="space-y-4 pt-2">
                   
                   <div className="space-y-1.5">
                     <div className="flex justify-between items-center text-[10px]">
@@ -1633,6 +1697,14 @@ Format the output cleanly in normal conversational paragraphs with distinct head
                     />
                   </div>
 
+                  <button
+                    type="button"
+                    onClick={handleSubmitDashboardMetrics}
+                    className="w-full bg-emerald-950 hover:bg-emerald-900 text-white text-xs font-black uppercase tracking-wider py-3 rounded-xl transition shadow flex items-center justify-center gap-1.5"
+                  >
+                    <Check className="h-4 w-4" /> Submit Dashboard Metrics
+                  </button>
+
                 </div>
               </div>
 
@@ -1641,7 +1713,7 @@ Format the output cleanly in normal conversational paragraphs with distinct head
           </div>
         )}
 
-
+        {}
         {activeTab === "food" && (
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 animate-fade-in">
             
@@ -1652,19 +1724,59 @@ Format the output cleanly in normal conversational paragraphs with distinct head
                     <FileText className="h-5.5 w-5.5 text-emerald-800" /> AI Molecular Food Parser
                   </h3>
                   <p className="text-xs text-slate-500 mt-1 leading-relaxed">
-                    Log custom dietary items or complete dishes. Gemini will analyze the molecular fibers, macronutrients (fats, carbs, protein), vitamins, minerals, and track overall score.
+                    Log custom dietary items, complete dishes, or take a direct camera photo of your plate! Gemini 1.5 Flash will analyze the food properties to estimate fats, carbs, proteins, prebiotics, probiotics, and plant diversity.
                   </p>
                 </div>
 
-                <div className="space-y-2">
-                  <label className="block text-[10px] font-black uppercase text-slate-400">Meal Description</label>
-                  <textarea
-                    rows="4"
-                    placeholder="e.g., Greek yogurt bowl with oats, wild berries, ground flaxseed, walnuts, and a squeeze of raw honey"
-                    value={foodInput}
-                    onChange={(e) => setFoodInput(e.target.value)}
-                    className="w-full p-4 text-xs rounded-2xl border border-slate-200 focus:ring-2 focus:ring-emerald-500 focus:outline-none leading-relaxed bg-slate-50/50"
-                  />
+                <div className="space-y-4">
+                  {/* Camera / Photo Upload section */}
+                  <div className="space-y-2">
+                    <label className="block text-[10px] font-black uppercase text-slate-400">Meal Photo (Camera / Gallery)</label>
+                    <div className="flex items-center gap-3">
+                      <label className="flex-1 flex items-center justify-center gap-2 border-2 border-dashed border-slate-200 hover:border-emerald-500 cursor-pointer p-4 rounded-2xl bg-slate-50/50 hover:bg-emerald-50/20 transition group">
+                        <input
+                          type="file"
+                          accept="image/*"
+                          capture="environment"
+                          onChange={handlePhotoSelect}
+                          className="hidden"
+                        />
+                        <div className="text-center">
+                          <Camera className="h-5 w-5 text-slate-400 group-hover:text-emerald-700 mx-auto mb-1" />
+                          <span className="text-[11px] text-slate-500 font-bold block">Take Photo / Upload</span>
+                        </div>
+                      </label>
+                    </div>
+
+                    {selectedPhoto && (
+                      <div className="relative mt-2 p-1 border border-slate-200 rounded-2xl bg-slate-50">
+                        <img 
+                          src={selectedPhoto.previewUrl} 
+                          alt="Meal Preview" 
+                          className="h-32 w-full object-cover rounded-xl"
+                        />
+                        <button
+                          type="button"
+                          onClick={() => setSelectedPhoto(null)}
+                          className="absolute top-2 right-2 bg-slate-900/80 hover:bg-slate-900 text-white p-1 rounded-lg transition"
+                          title="Remove Photo"
+                        >
+                          <X className="h-4 w-4" />
+                        </button>
+                      </div>
+                    )}
+                  </div>
+
+                  <div className="space-y-2">
+                    <label className="block text-[10px] font-black uppercase text-slate-400">Meal Description</label>
+                    <textarea
+                      rows="4"
+                      placeholder="e.g., Greek yogurt bowl with oats, wild berries, ground flaxseed, walnuts, and a squeeze of raw honey"
+                      value={foodInput}
+                      onChange={(e) => setFoodInput(e.target.value)}
+                      className="w-full p-4 text-xs rounded-2xl border border-slate-200 focus:ring-2 focus:ring-emerald-500 focus:outline-none leading-relaxed bg-slate-50/50"
+                    />
+                  </div>
                 </div>
 
                 <button
@@ -1702,6 +1814,7 @@ Format the output cleanly in normal conversational paragraphs with distinct head
               </div>
             </div>
 
+            {}
             <div className="lg:col-span-2 space-y-6">
               <div className="bg-white rounded-3xl p-6 border border-slate-100 shadow-sm">
                 <div className="flex justify-between items-center mb-6 pb-4 border-b border-slate-100">
@@ -1768,13 +1881,13 @@ Format the output cleanly in normal conversational paragraphs with distinct head
 
                           <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 border-y border-slate-100/80 py-2.5">
                             <div className="bg-slate-100 text-slate-700 text-[10px] p-1.5 rounded-lg font-semibold text-center">
-                              🍞 Carbs: <span className="font-bold">{log.carbs || 12}g</span>
+                              🥑 Fats: <span className="font-bold">{log.fats || 0}g</span>
                             </div>
                             <div className="bg-slate-100 text-slate-700 text-[10px] p-1.5 rounded-lg font-semibold text-center">
-                              🥩 Protein: <span className="font-bold">{log.protein || 6}g</span>
+                              🍞 Carbs: <span className="font-bold">{log.carbs || 0}g</span>
                             </div>
                             <div className="bg-slate-100 text-slate-700 text-[10px] p-1.5 rounded-lg font-semibold text-center">
-                              🥑 Fats: <span className="font-bold">{log.fats || 4}g</span>
+                              🥩 Protein: <span className="font-bold">{log.protein || 0}g</span>
                             </div>
                             <div className="bg-slate-100 text-slate-700 text-[10px] p-1.5 rounded-lg font-semibold text-center truncate" title={log.vitamins}>
                               🍊 Vitamins: <span className="font-bold text-[9px] block truncate">{log.vitamins || "None"}</span>
@@ -1801,7 +1914,7 @@ Format the output cleanly in normal conversational paragraphs with distinct head
           </div>
         )}
 
-
+        {}
         {activeTab === 'symptoms' && (
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
             
@@ -1894,6 +2007,7 @@ Format the output cleanly in normal conversational paragraphs with distinct head
               </div>
             </div>
 
+            {}
             <div className="space-y-6">
               
               <div className="bg-white rounded-3xl p-6 border border-slate-100 shadow-sm space-y-6">
@@ -2141,6 +2255,9 @@ Format the output cleanly in normal conversational paragraphs with distinct head
                     } else if (log.type === 'stress') {
                       badgeColor = 'bg-purple-100 text-purple-800 border-purple-200';
                       displayVal = `Stress: ${log.value}/5`;
+                    } else if (log.type === 'water') {
+                      badgeColor = 'bg-emerald-100 text-emerald-800 border-emerald-200';
+                      displayVal = `Hydration: ${log.value} Liters`;
                     }
 
                     return (
@@ -2176,7 +2293,7 @@ Format the output cleanly in normal conversational paragraphs with distinct head
           </div>
         )}
 
-
+        {}
         {activeTab === "education" && (
           <div className="space-y-8 animate-fade-in">
             
@@ -2246,9 +2363,10 @@ Format the output cleanly in normal conversational paragraphs with distinct head
 
       </main>
 
+      {}
       <footer className="bg-white border-t border-slate-100 mt-20">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 flex flex-col sm:flex-row items-center justify-between gap-4 text-[11px] font-semibold text-slate-400">
-          <p>© 2026 MycoBiome AI. Curate your ecosystem, cultivate your health.</p>
+          <p>© 2026 MyBiome AI. Curate your ecosystem, cultivate your health.</p>
           <div className="flex gap-4">
             <a href="https://aistudio.google.com/" target="_blank" rel="noopener noreferrer" className="hover:text-slate-900 transition">Get Gemini Token</a>
             <span className="text-slate-200">|</span>
